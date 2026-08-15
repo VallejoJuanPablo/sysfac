@@ -83,6 +83,7 @@ export async function generarPdf(
           position: relative;
           z-index: 1;
           padding: 40px;
+          padding-top: 30mm;
         }
         .header-info {
           text-align: right;
