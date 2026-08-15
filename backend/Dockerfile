@@ -1,6 +1,8 @@
 # ---- Build stage ----
 FROM node:22-slim AS builder
 
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./
