@@ -26,7 +26,7 @@ router.get('/', async (_req: AuthRequest, res: Response) => {
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const presupuesto = await prisma.presupuesto.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: parseInt(req.params.id as string) },
       include: { items: { include: { servicio: true } } },
     });
 
@@ -146,7 +146,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 router.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
   try {
     const presupuesto = await prisma.presupuesto.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: parseInt(req.params.id as string) },
       include: { items: { include: { servicio: true } } },
     });
 
