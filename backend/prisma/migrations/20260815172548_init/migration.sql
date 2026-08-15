@@ -32,7 +32,7 @@ CREATE TABLE `presupuestos` (
     `fecha` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `tipo` VARCHAR(191) NOT NULL DEFAULT 'general',
     `forma_pago` VARCHAR(191) NOT NULL DEFAULT 'Transferencia/efectivo',
-    `garantia` TEXT NOT NULL DEFAULT 'Servicio con garantía de 6 meses del trabajo realizado. (desde día de la fecha)',
+    `garantia` VARCHAR(500) NOT NULL DEFAULT 'Servicio con garantía de 6 meses del trabajo realizado. (desde día de la fecha)',
     `responsable` VARCHAR(191) NOT NULL DEFAULT 'Centurión Matias',
     `estado` VARCHAR(191) NOT NULL DEFAULT 'borrador',
     `total` DECIMAL(12, 2) NOT NULL DEFAULT 0,
