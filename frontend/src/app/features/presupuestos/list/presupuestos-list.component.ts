@@ -75,7 +75,7 @@ interface Presupuesto {
                     </td>
                     <td class="px-6 py-4 text-center">
                       <button
-                        (click)="descargarPdf(p.id, p.numero)"
+                        (click)="descargarPdf(p)"
                         class="text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
                         title="Descargar PDF"
                       >
@@ -118,28 +118,33 @@ export class PresupuestosListComponent implements OnInit {
     }
   }
 
-  descargarPdf(id: number, numero: number) {
+  descargarPdf(p: Presupuesto) {
     Swal.fire({
       title: 'Generando PDF...',
-      text: `Presupuesto #${numero}`,
+      text: `Presupuesto #${p.numero}`,
       allowOutsideClick: false,
       allowEscapeKey: false,
       didOpen: () => Swal.showLoading(),
     });
 
-    this.http.get(`/api/presupuestos/${id}/pdf`, { responseType: 'blob' }).subscribe({
+    const fecha = new Date(p.fecha);
+    const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth() + 1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`;
+    const clienteStr = p.cliente.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const fileName = `presupuesto_${fechaStr}_${clienteStr}.pdf`;
+
+    this.http.get(`/api/presupuestos/${p.id}/pdf`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `presupuesto-${numero}.pdf`;
+        a.download = fileName;
         a.click();
         window.URL.revokeObjectURL(url);
 
         Swal.fire({
           icon: 'success',
           title: 'PDF generado',
-          text: `Presupuesto #${numero} descargado`,
+          text: `${fileName} descargado`,
           timer: 2000,
           showConfirmButton: false,
         });

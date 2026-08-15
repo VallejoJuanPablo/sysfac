@@ -162,11 +162,13 @@ router.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
 
     const pdfBuffer = await generarPdf(presupuesto, config);
 
+    const fecha = new Date(presupuesto.fecha);
+    const fechaStr = `${fecha.getFullYear()}${String(fecha.getMonth() + 1).padStart(2, '0')}${String(fecha.getDate()).padStart(2, '0')}`;
+    const clienteStr = presupuesto.cliente.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const fileName = `presupuesto_${fechaStr}_${clienteStr}.pdf`;
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename=presupuesto-${presupuesto.numero}.pdf`
-    );
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Error generando PDF:', error);
