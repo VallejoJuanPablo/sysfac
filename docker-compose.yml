@@ -1,4 +1,5 @@
 services:
+  # === BASE DE DATOS ===
   sysfac-db:
     image: mysql:8.0
     container_name: sysfac-db
@@ -9,7 +10,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - sysfac_db_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     networks:
       - internal
     healthcheck:
@@ -17,24 +18,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
+  # === BACKEND (Node.js + Express + Prisma + Puppeteer) ===
   sysfac-api:
-    build: ./backend
+    build:
+      context: ./repo/backend
+      dockerfile: Dockerfile
     container_name: sysfac-api
     restart: unless-stopped
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT=3000
-      - NODE_ENV=production
+    env_file:
+      - .env
     networks:
       - internal
     depends_on:
       sysfac-db:
         condition: service_healthy
 
+  # === FRONTEND (Angular 19 + Tailwind + Nginx) ===
   sysfac-web:
-    build: ./frontend
+    build:
+      context: ./repo/frontend
+      dockerfile: Dockerfile
     container_name: sysfac-web
     restart: unless-stopped
     networks:
@@ -43,17 +48,18 @@ services:
     depends_on:
       - sysfac-api
     labels:
+      # Traefik: rutear este dominio a este container
       - "traefik.enable=true"
-      - "traefik.http.routers.sysfac.rule=Host(`sysfac.bowin.com.ar`)"
+      - "traefik.http.routers.sysfac.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.sysfac.entrypoints=websecure"
       - "traefik.http.routers.sysfac.tls.certresolver=letsencrypt"
       - "traefik.http.services.sysfac.loadbalancer.server.port=80"
 
 networks:
   proxy:
-    external: true
+    external: true                    # Red compartida con Traefik
   internal:
-    driver: bridge
+    driver: bridge                    # Red interna (solo este proyecto)
 
 volumes:
-  sysfac_db_data:
+  db_data:                            # Datos de MySQL persistentes
