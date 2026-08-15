@@ -1,0 +1,59 @@
+services:
+  sysfac-db:
+    image: mysql:8.0
+    container_name: sysfac-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - sysfac_db_data:/var/lib/mysql
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sysfac-api:
+    build: ./backend
+    container_name: sysfac-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3000
+      - NODE_ENV=production
+    networks:
+      - internal
+    depends_on:
+      sysfac-db:
+        condition: service_healthy
+
+  sysfac-web:
+    build: ./frontend
+    container_name: sysfac-web
+    restart: unless-stopped
+    networks:
+      - internal
+      - proxy
+    depends_on:
+      - sysfac-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sysfac.rule=Host(`sysfac.bowin.com.ar`)"
+      - "traefik.http.routers.sysfac.entrypoints=websecure"
+      - "traefik.http.routers.sysfac.tls.certresolver=letsencrypt"
+      - "traefik.http.services.sysfac.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  sysfac_db_data:
