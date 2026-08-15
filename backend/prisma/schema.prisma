@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  nombre    String
+  rol       String   @default("admin")
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("usuarios")
+}
+
+model Servicio {
+  id            Int               @id @default(autoincrement())
+  nombre        String            @unique
+  precioDefault Decimal           @db.Decimal(12, 2) @map("precio_default")
+  activo        Boolean           @default(true)
+  createdAt     DateTime          @default(now()) @map("created_at")
+  items         PresupuestoItem[]
+
+  @@map("servicios")
+}
+
+model Presupuesto {
+  id          Int               @id @default(autoincrement())
+  numero      Int               @unique
+  cliente     String
+  fecha       DateTime          @default(now())
+  tipo        String            @default("general")
+  formaPago   String            @default("Transferencia/efectivo") @map("forma_pago")
+  garantia    String            @db.Text @default("Servicio con garantía de 6 meses del trabajo realizado. (desde día de la fecha)")
+  responsable String            @default("Centurión Matias")
+  estado      String            @default("borrador")
+  total       Decimal           @db.Decimal(12, 2) @default(0)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  items       PresupuestoItem[]
+
+  @@map("presupuestos")
+}
+
+model PresupuestoItem {
+  id             Int          @id @default(autoincrement())
+  presupuestoId  Int          @map("presupuesto_id")
+  servicioId     Int?         @map("servicio_id")
+  descripcion    String
+  cantidad       Int
+  precioUnitario Decimal      @db.Decimal(12, 2) @map("precio_unitario")
+  subtotal       Decimal      @db.Decimal(12, 2)
+  presupuesto    Presupuesto  @relation(fields: [presupuestoId], references: [id], onDelete: Cascade)
+  servicio       Servicio?    @relation(fields: [servicioId], references: [id])
+
+  @@map("presupuesto_items")
+}
+
+model Configuracion {
+  id    Int    @id @default(autoincrement())
+  clave String @unique
+  valor String @db.Text
+
+  @@map("configuracion")
+}
