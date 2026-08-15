@@ -37,7 +37,7 @@ model Presupuesto {
   fecha       DateTime          @default(now())
   tipo        String            @default("general")
   formaPago   String            @default("Transferencia/efectivo") @map("forma_pago")
-  garantia    String            @db.Text @default("Servicio con garantía de 6 meses del trabajo realizado. (desde día de la fecha)")
+  garantia    String            @db.VarChar(500) @default("Servicio con garantía de 6 meses del trabajo realizado. (desde día de la fecha)")
   responsable String            @default("Centurión Matias")
   estado      String            @default("borrador")
   total       Decimal           @db.Decimal(12, 2) @default(0)
