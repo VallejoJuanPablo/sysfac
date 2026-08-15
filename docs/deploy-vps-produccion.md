@@ -2,6 +2,7 @@
 
 > **Dominio:** sysfac.bowin.com.ar
 > **Servidor:** Server 2 (mismo que ArchieTeam, n8n)
+> **Repo:** https://github.com/VallejoJuanPablo/sysfac.git
 > **Stack:** Angular 19 + Node.js/Express + MySQL 8 + Puppeteer
 > **Infra:** Docker + Traefik (ya configurado en Server 2)
 
@@ -11,17 +12,14 @@
 
 1. [Prerequisitos](#1-prerequisitos)
 2. [Configurar DNS](#2-configurar-dns)
-3. [Estructura en el VPS](#3-estructura-en-el-vps)
+3. [Clonar el repositorio](#3-clonar-el-repositorio)
 4. [Variables de entorno (.env)](#4-variables-de-entorno-env)
-5. [Dockerfile Backend](#5-dockerfile-backend)
-6. [Dockerfile Frontend](#6-dockerfile-frontend)
-7. [Nginx config (frontend)](#7-nginx-config-frontend)
-8. [Docker Compose](#8-docker-compose)
-9. [Subir archivos al VPS](#9-subir-archivos-al-vps)
-10. [Levantar y verificar](#10-levantar-y-verificar)
-11. [Seed de la base de datos](#11-seed-de-la-base-de-datos)
-12. [Verificacion final](#12-verificacion-final)
-13. [Troubleshooting](#13-troubleshooting)
+5. [Levantar y verificar](#5-levantar-y-verificar)
+6. [Seed de la base de datos](#6-seed-de-la-base-de-datos)
+7. [Verificacion final](#7-verificacion-final)
+8. [Actualizar (deploy de nueva version)](#8-actualizar-deploy-de-nueva-version)
+9. [Troubleshooting](#9-troubleshooting)
+10. [Comandos utiles](#10-comandos-utiles)
 
 ---
 
@@ -32,12 +30,14 @@ El Server 2 ya tiene la infra base:
 - Traefik v3.x como reverse proxy (red `proxy`)
 - Portainer en portainer.server2.bowin.com.ar
 - UFW con puertos 80/443 abiertos
+- Git instalado
 
 **Verificar en el VPS:**
 ```bash
 docker --version          # Docker 24+
 docker compose version    # v2.x
 docker network ls | grep proxy  # Red 'proxy' debe existir
+git --version             # Git 2.x
 ```
 
 ---
@@ -54,26 +54,24 @@ Agregar un registro **A** en el panel DNS de bowin.com.ar:
 
 ---
 
-## 3. Estructura en el VPS
+## 3. Clonar el repositorio
 
 ```bash
-mkdir -p /opt/docker/sysfac/{backend,frontend}
-cd /opt/docker/sysfac
+cd /opt/docker
+git clone https://github.com/VallejoJuanPablo/sysfac.git sysfac
+cd sysfac
 ```
 
-Estructura final:
+El repo ya contiene todo lo necesario:
 ```
 /opt/docker/sysfac/
 ├── docker-compose.yml
-├── .env
 ├── backend/
 │   ├── Dockerfile
 │   ├── src/
 │   ├── prisma/
-│   ├── assets/
-│   │   └── modelo-vacio.jpg
+│   ├── assets/modelo-vacio.jpg
 │   ├── package.json
-│   ├── package-lock.json
 │   └── tsconfig.json
 ├── frontend/
 │   ├── Dockerfile
@@ -81,282 +79,49 @@ Estructura final:
 │   ├── src/
 │   ├── angular.json
 │   ├── package.json
-│   ├── package-lock.json
-│   ├── tsconfig.json
-│   ├── tsconfig.app.json
 │   └── .postcssrc.json
+└── docs/
 ```
 
 ---
 
 ## 4. Variables de entorno (.env)
 
-Crear `/opt/docker/sysfac/.env`:
+Crear el `.env` en la raiz del proyecto (no se commitea al repo):
 
 ```bash
-# === GENERAR PASSWORDS SEGURAS ===
-# IMPORTANTE: usar hex, NO base64 (base64 genera / y + que rompen URLs)
-# openssl rand -hex 32
+cd /opt/docker/sysfac
 
+# Generar passwords seguras
+MYSQL_PASS=$(openssl rand -hex 32)
+JWT_SEC=$(openssl rand -hex 64)
+
+cat > .env << EOF
 # MySQL
-MYSQL_ROOT_PASSWORD=<openssl rand -hex 32>
+MYSQL_ROOT_PASSWORD=$(openssl rand -hex 32)
 MYSQL_DATABASE=sysfac
 MYSQL_USER=sysfac_user
-MYSQL_PASSWORD=<openssl rand -hex 32>
+MYSQL_PASSWORD=${MYSQL_PASS}
 
 # Backend
-DATABASE_URL=mysql://sysfac_user:MYSQL_PASSWORD_AQUI@sysfac-db:3306/sysfac
-JWT_SECRET=<openssl rand -hex 64>
+DATABASE_URL=mysql://sysfac_user:${MYSQL_PASS}@sysfac-db:3306/sysfac
+JWT_SECRET=${JWT_SEC}
 PORT=3000
 NODE_ENV=production
 
 # Dominio
 DOMAIN=sysfac.bowin.com.ar
-```
+EOF
 
-> **CRITICO:** Reemplazar `MYSQL_PASSWORD_AQUI` en DATABASE_URL con el valor real generado para MYSQL_PASSWORD. Copiar el valor exacto, sin espacios.
+echo "=== .env generado ==="
+cat .env
+```
 
 > **ANOTAR:** Las credenciales del login admin son `pituco / pituco`. Se crean con el seed.
 
 ---
 
-## 5. Dockerfile Backend
-
-Crear `/opt/docker/sysfac/backend/Dockerfile`:
-
-```dockerfile
-# ---- Build stage ----
-FROM node:22-slim AS builder
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install
-
-COPY prisma ./prisma
-RUN npx prisma generate
-
-COPY tsconfig.json ./
-COPY src ./src
-
-RUN npx tsc
-
-# ---- Production stage ----
-FROM node:22-slim
-
-# Puppeteer necesita Chromium y sus dependencias
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    fonts-liberation \
-    libappindicator3-1 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdbus-1-3 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
-
-# Decirle a Puppeteer que use el Chromium del sistema
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install --omit=dev
-
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/dist ./dist
-COPY prisma ./prisma
-COPY assets ./assets
-
-EXPOSE 3000
-
-CMD ["node", "dist/index.js"]
-```
-
-> **IMPORTANTE:** Puppeteer en Docker NO descarga Chromium. Instalamos el Chromium del sistema con `apt-get` y le decimos a Puppeteer que lo use via `PUPPETEER_EXECUTABLE_PATH`.
-
----
-
-## 6. Dockerfile Frontend
-
-Crear `/opt/docker/sysfac/frontend/Dockerfile`:
-
-```dockerfile
-# ---- Build stage ----
-FROM node:22-slim AS builder
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm install --legacy-peer-deps
-
-COPY . .
-
-RUN npx ng build --configuration=production
-
-# ---- Production stage ----
-FROM nginx:alpine
-
-COPY --from=builder /app/dist/frontend/browser /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-```
-
----
-
-## 7. Nginx config (frontend)
-
-Crear `/opt/docker/sysfac/frontend/nginx.conf`:
-
-```nginx
-server {
-    listen 80;
-    server_name sysfac.bowin.com.ar;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Angular SPA: rutas al index.html
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Proxy al backend API
-    location /api/ {
-        proxy_pass http://sysfac-api:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # PDF puede tardar — timeout generoso
-        proxy_read_timeout 60s;
-        proxy_send_timeout 60s;
-    }
-
-    # Cache para assets estaticos
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Gzip
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
-    gzip_min_length 1000;
-}
-```
-
----
-
-## 8. Docker Compose
-
-Crear `/opt/docker/sysfac/docker-compose.yml`:
-
-```yaml
-services:
-  sysfac-db:
-    image: mysql:8.0
-    container_name: sysfac-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - sysfac_db_data:/var/lib/mysql
-    networks:
-      - internal
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  sysfac-api:
-    build: ./backend
-    container_name: sysfac-api
-    restart: unless-stopped
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT=3000
-      - NODE_ENV=production
-    networks:
-      - internal
-    depends_on:
-      sysfac-db:
-        condition: service_healthy
-
-  sysfac-web:
-    build: ./frontend
-    container_name: sysfac-web
-    restart: unless-stopped
-    networks:
-      - internal
-      - proxy
-    depends_on:
-      - sysfac-api
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.sysfac.rule=Host(`sysfac.bowin.com.ar`)"
-      - "traefik.http.routers.sysfac.entrypoints=websecure"
-      - "traefik.http.routers.sysfac.tls.certresolver=letsencrypt"
-      - "traefik.http.services.sysfac.loadbalancer.server.port=80"
-
-networks:
-  proxy:
-    external: true
-  internal:
-    driver: bridge
-
-volumes:
-  sysfac_db_data:
-```
-
----
-
-## 9. Subir archivos al VPS
-
-Desde tu maquina local:
-
-```bash
-# Opcion A: rsync (recomendado)
-rsync -avz --exclude='node_modules' --exclude='dist' --exclude='.angular' \
-  /c/xampp/htdocs/Personal/SysFac/backend/ \
-  usuario@IP_SERVER2:/opt/docker/sysfac/backend/
-
-rsync -avz --exclude='node_modules' --exclude='dist' --exclude='.angular' \
-  /c/xampp/htdocs/Personal/SysFac/frontend/ \
-  usuario@IP_SERVER2:/opt/docker/sysfac/frontend/
-
-# Opcion B: scp
-scp -r backend/ usuario@IP_SERVER2:/opt/docker/sysfac/backend/
-scp -r frontend/ usuario@IP_SERVER2:/opt/docker/sysfac/frontend/
-```
-
-> **NO subir:** `node_modules/`, `dist/`, `.angular/`, `.env` local (crear uno nuevo en el VPS con passwords de produccion).
-
----
-
-## 10. Levantar y verificar
+## 5. Levantar y verificar
 
 ```bash
 cd /opt/docker/sysfac
@@ -381,9 +146,9 @@ sysfac-web    Up
 
 ---
 
-## 11. Seed de la base de datos
+## 6. Seed de la base de datos
 
-Despues de que MySQL este healthy, ejecutar las migraciones y el seed:
+Despues de que MySQL este healthy, ejecutar migraciones y seed:
 
 ```bash
 # Ejecutar migraciones de Prisma
@@ -435,7 +200,7 @@ main().catch(console.error).finally(() => prisma.\$disconnect());
 
 ---
 
-## 12. Verificacion final
+## 7. Verificacion final
 
 ### Checklist
 
@@ -470,7 +235,28 @@ curl -X POST https://sysfac.bowin.com.ar/api/auth/login \
 
 ---
 
-## 13. Troubleshooting
+## 8. Actualizar (deploy de nueva version)
+
+Cuando se pushean cambios al repo, actualizar en el VPS:
+
+```bash
+cd /opt/docker/sysfac
+
+# Traer cambios
+git pull origin master
+
+# Rebuild y restart
+docker compose up -d --build
+
+# Si hay migraciones nuevas de Prisma
+docker compose exec sysfac-api npx prisma migrate deploy
+```
+
+> Los datos de la base de datos se mantienen (volume persistente `sysfac_db_data`).
+
+---
+
+## 9. Troubleshooting
 
 ### Container no levanta
 ```bash
@@ -483,7 +269,7 @@ docker compose logs sysfac-web    # Ver error de Nginx
 ```bash
 # Verificar que el volume no este corrupto
 docker volume ls | grep sysfac
-# Si es necesario, borrar y recrear
+# Si es necesario, borrar y recrear (PIERDE DATOS)
 docker compose down -v
 docker compose up -d --build
 ```
@@ -494,7 +280,7 @@ docker compose up -d --build
 docker compose exec sysfac-api which chromium
 # Debe retornar: /usr/bin/chromium
 
-# Si no encuentra Chromium, el Dockerfile del backend necesita rebuild
+# Si no encuentra Chromium, rebuild sin cache
 docker compose build sysfac-api --no-cache
 ```
 
@@ -528,12 +314,12 @@ docker compose exec sysfac-web ls /usr/share/nginx/html
 ```bash
 # Regenerar con hex (solo 0-9, a-f, sin caracteres especiales)
 openssl rand -hex 32
-# Actualizar .env y docker-compose restart
+# Actualizar .env y docker compose restart
 ```
 
 ---
 
-## Comandos utiles
+## 10. Comandos utiles
 
 ```bash
 # Reiniciar todo
@@ -550,6 +336,9 @@ docker compose exec sysfac-db mysqldump -u root -p$MYSQL_ROOT_PASSWORD sysfac > 
 
 # Restaurar backup
 docker compose exec -T sysfac-db mysql -u root -p$MYSQL_ROOT_PASSWORD sysfac < backup.sql
+
+# Ver logs de un container especifico
+docker compose logs -f sysfac-api --tail 100
 ```
 
 ---
