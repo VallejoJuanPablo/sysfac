@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { CurrencyPipe } from '../../../shared/pipes/currency.pipe';
+import Swal from 'sweetalert2';
 
 interface Presupuesto {
   id: number;
@@ -75,7 +76,7 @@ interface Presupuesto {
                     <td class="px-6 py-4 text-center">
                       <button
                         (click)="descargarPdf(p.id, p.numero)"
-                        class="text-indigo-600 hover:text-indigo-800 transition"
+                        class="text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
                         title="Descargar PDF"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,13 +119,38 @@ export class PresupuestosListComponent implements OnInit {
   }
 
   descargarPdf(id: number, numero: number) {
-    this.http.get(`/api/presupuestos/${id}/pdf`, { responseType: 'blob' }).subscribe((blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `presupuesto-${numero}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+    Swal.fire({
+      title: 'Generando PDF...',
+      text: `Presupuesto #${numero}`,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    this.http.get(`/api/presupuestos/${id}/pdf`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `presupuesto-${numero}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'PDF generado',
+          text: `Presupuesto #${numero} descargado`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo generar el PDF',
+        });
+      },
     });
   }
 }
