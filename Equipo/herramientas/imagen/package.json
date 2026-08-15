@@ -1,0 +1,13 @@
+{
+  "name": "archie-imagen",
+  "version": "1.0.0",
+  "description": "Generador de imágenes con Gemini Imagen 3 para el equipo Archie",
+  "type": "module",
+  "scripts": {
+    "generar": "node src/generar.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.4.7"
+  }
+}

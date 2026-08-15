@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp@latest"],
+      "env": {}
+    },
+    "n8n": {
+      "type": "stdio",
+      "command": "n8n-mcp-server",
+      "args": [],
+      "env": {
+        "N8N_API_URL": "https://n8n.bowin.com.ar",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiOGRlNGU4Ni1mMDY4LTQ4ZDMtOTcwNi1mMWYxNDYxZDg1YjkiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNTE1YTMxZWYtZTgzNC00M2RkLWEzM2EtYzBkZjRjYWM0YTE5IiwiaWF0IjoxNzg2MDY4MTI2fQ.q5SlhZA-8SsCNzUISD9CjCkzXktHEYK55DL2AWUSsVo"
+      }
+    },
+    "apidog-agroenvios": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "apidog-mcp-server@latest", "--project-id=802942"],
+      "env": {
+        "APIDOG_ACCESS_TOKEN": "adgp_cfbe4anYNVGiuNuBbjLWmIrIU3K5opTA8nmm"
+      }
+    },
+    "apidog-TodoAgro": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "apidog-mcp-server@latest", "--project-id=802919"],
+      "env": {
+        "APIDOG_ACCESS_TOKEN": "adgp_cfbe4anYNVGiuNuBbjLWmIrIU3K5opTA8nmm"
+      }
+    }
+  }
+}

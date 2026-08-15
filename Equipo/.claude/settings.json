@@ -1,0 +1,106 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/xampp/htdocs/Equipo/scripts/hooks/pre-bash.js\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/xampp/htdocs/Equipo/scripts/hooks/on-stop.js\""
+          },
+          {
+            "type": "command",
+            "command": "node \"C:/xampp/htdocs/Equipo/scripts/hooks/auto-save-context.js\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(cd *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(find *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(echo *)",
+      "Bash(grep *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(curl *)",
+      "Bash(which *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(netstat *)",
+      "Bash(taskkill *)",
+      "Bash(code *)",
+      "Bash(for *)",
+      "Bash(until *)",
+      "Bash(sleep *)",
+      "Bash(md-to-pdf *)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"C:/xampp/htdocs/Equipo/.claude/statusline.mjs\"",
+    "refreshInterval": 5
+  },
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "n8n": {
+      "command": "n8n-mcp-server",
+      "env": {
+        "N8N_API_URL": "http://localhost:5678/api/v1",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODVkMTRiYi1jMTkwLTQ4NDUtODUwMy1lZGVkNDcxYmQxMmMiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiOTliYTI0OWYtOTgwZC00YmZhLWIwNmMtOTQ1NmE5MjJmOThkIiwiaWF0IjoxNzc4MDEwMDc5fQ.oyVl5aU-sJNV0bs_yj2qReQT_E2kNaHQKE0u26QldFY"
+      }
+    },
+    "apidog-agroenvios": {
+      "command": "npx",
+      "args": ["-y", "apidog-mcp-server@latest", "--project-id=1293591"],
+      "env": {
+        "APIDOG_ACCESS_TOKEN": "adgp_cfbe4anYNVGiuNuBbjLWmIrIU3K5opTA8nmm"
+      }
+    },
+    "apidog-TodoAgro": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "apidog-mcp-server@latest",
+        "--project-id=802919"
+      ],
+      "env": {
+        "APIDOG_ACCESS_TOKEN": "adgp_cfbe4anYNVGiuNuBbjLWmIrIU3K5opTA8nmm"
+      }
+    }
+  }
+}

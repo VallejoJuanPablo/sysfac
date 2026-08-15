@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-08-14T23:59:41.918Z",
+  "projects_with_changes": [
+    {
+      "project": "GymPulse",
+      "branch": "style/admin-agroenvios-theme",
+      "changedFiles": 5,
+      "lastCommit": "85e560a style: rediseño completo del admin al estilo AgroEnviosPanel"
+    },
+    {
+      "project": "LavaderoOs",
+      "branch": "master",
+      "changedFiles": 7,
+      "lastCommit": "827e2bc feat: script de simulación de 1 año de operación realista"
+    },
+    {
+      "project": "IL017-broker-manager-frontend",
+      "branch": "master",
+      "changedFiles": 3,
+      "lastCommit": "cd1ced6e Merge branch 'fix/orders-table-column-widths' into dev"
+    },
+    {
+      "project": "Braillin",
+      "branch": "main",
+      "changedFiles": 2,
+      "lastCommit": "af4c189 merge: feature/hero-imagen-admin → main (SPEC-2026-006 hero editable)"
+    },
+    {
+      "project": "microTelco",
+      "branch": "feat/fase-1-fundacion",
+      "changedFiles": 5,
+      "lastCommit": "2a01eb8 fix: letras sidebar blancas + registrar Chart.js para gráficos"
+    },
+    {
+      "project": "FrontKit",
+      "branch": "feat/frontkit-expansion",
+      "changedFiles": 13,
+      "lastCommit": "31a597b chore: update archie-context with final session state"
+    },
+    {
+      "project": "AgroEnvioPanel",
+      "branch": "feat/idcliente-objectid",
+      "changedFiles": 3,
+      "lastCommit": "5bc7a59 feat: tipar idCliente como ObjectId + selector de clientes en usuario-form"
+    },
+    {
+      "project": "ArchieTeam",
+      "branch": "master",
+      "changedFiles": 3,
+      "lastCommit": "e79e178 feat: actualizar datos del equipo a julio 2026"
+    },
+    {
+      "project": "BarberiaElJefe",
+      "branch": "main",
+      "changedFiles": 3,
+      "lastCommit": "ee4e221 Merge branch 'feature/landing-seccion-negocios'"
+    },
+    {
+      "project": "panelhandlerfacaf",
+      "branch": "master",
+      "changedFiles": 4,
+      "lastCommit": "ad8e1e9 feat(abm-convenios): boton Ver Convenios en listado de farmacias"
+    }
+  ]
+}

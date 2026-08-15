@@ -1,0 +1,204 @@
+{
+  "descripcion": "Contador de uso de skills del equipo Archie. Se actualiza cada vez que se delega una tarea usando una skill.",
+  "ultima_actualizacion": "2026-08-13",
+  "nota": "23 skills de Claude Code archivadas el 2026-08-13 a .claude/skills/_archivo/. 3 skills de equipo reactivadas el 2026-08-13.",
+  "skills_equipo": {
+    "angular": {
+      "usos": 103,
+      "ultimo_uso": "2026-08-12",
+      "proyecto": "IL017-broker-manager-frontend"
+    },
+    "componentes-angular": {
+      "usos": 110,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "nodejs": {
+      "usos": 17,
+      "ultimo_uso": "2026-07-11",
+      "proyecto": "Braillin"
+    },
+    "git": {
+      "usos": 48,
+      "ultimo_uso": "2026-08-12",
+      "proyecto": "IL017-broker-manager-frontend"
+    },
+    "sdd": {
+      "usos": 21,
+      "ultimo_uso": "2026-08-06",
+      "proyecto": "IL017-broker-manager-frontend"
+    },
+    "diseño-ui": {
+      "usos": 35,
+      "ultimo_uso": "2026-06-26",
+      "proyecto": "FrontKit"
+    },
+    "buenas-practicas": {
+      "usos": 19,
+      "ultimo_uso": "2026-06-26",
+      "proyecto": "AgroEnvioPanel"
+    },
+    "mongodb": {
+      "usos": 10,
+      "ultimo_uso": "2026-06-25",
+      "proyecto": "AgroEnvios"
+    },
+    "n8n": {
+      "usos": 4,
+      "ultimo_uso": "2026-06-25",
+      "proyecto": "Equipo"
+    },
+    "microservicios": {
+      "usos": 3,
+      "ultimo_uso": "2026-06-25",
+      "proyecto": "AgroEnvios"
+    },
+    "graphify": {
+      "usos": 2,
+      "ultimo_uso": "2026-06-30",
+      "proyecto": "IL017-broker-manager-frontend"
+    },
+    "mysql": {
+      "usos": 1,
+      "ultimo_uso": "2026-06-04",
+      "proyecto": "Braillin"
+    },
+    "patrones-diseño": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "generacion-imagen": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "optimizacion-tokens": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "ddd": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "openspec": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    }
+  },
+  "skills_claude_code": {
+    "impeccable": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "ui-ux-pro-max": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "design": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "ui-styling": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "high-end-visual-design": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "design-taste-frontend": {
+      "usos": 33,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "layout": {
+      "usos": 19,
+      "ultimo_uso": "2026-08-12",
+      "proyecto": "IL017-broker-manager-frontend"
+    },
+    "animate": {
+      "usos": 15,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "full-output-enforcement": {
+      "usos": 10,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit"
+    },
+    "adapt": {
+      "usos": 10,
+      "ultimo_uso": "2026-06-18",
+      "proyecto": "IL017"
+    },
+    "design-system": {
+      "usos": 6,
+      "ultimo_uso": "2026-06-09",
+      "proyecto": "FrontKit"
+    },
+    "overdrive": {
+      "usos": 1,
+      "ultimo_uso": "2026-06-09",
+      "proyecto": "FrontKit"
+    },
+    "shape": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "harden": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "polish": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "audit": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "optimize": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "clarify": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "redesign-existing-projects": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "colorize": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "distill": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    },
+    "archie-help": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null
+    }
+  }
+}

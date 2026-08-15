@@ -1,0 +1,72 @@
+{
+  "descripcion": "Contador de uso de agentes del equipo Archie. Se actualiza cada vez que se delega una tarea a un agente.",
+  "ultima_actualizacion": "2026-08-12",
+  "agentes": {
+    "analisis/proyecto": {
+      "usos": 5,
+      "ultimo_uso": "2026-06-25",
+      "proyecto": "AgroEnvioPanel",
+      "modelo": "opus"
+    },
+    "analisis/codigo": {
+      "usos": 10,
+      "ultimo_uso": "2026-08-12",
+      "proyecto": "IL017-broker-manager-frontend",
+      "modelo": "haiku"
+    },
+    "backend/nodejs": {
+      "usos": 16,
+      "ultimo_uso": "2026-07-11",
+      "proyecto": "Braillin",
+      "modelo": "opus"
+    },
+    "frontend/angular": {
+      "usos": 94,
+      "ultimo_uso": "2026-08-12",
+      "proyecto": "IL017-broker-manager-frontend",
+      "modelo": "sonnet"
+    },
+    "diseño/ui-ux": {
+      "usos": 34,
+      "ultimo_uso": "2026-06-10",
+      "proyecto": "FrontKit",
+      "modelo": "opus"
+    },
+    "verificacion/qualified-code": {
+      "usos": 11,
+      "ultimo_uso": "2026-08-06",
+      "proyecto": "IL017-broker-manager-frontend",
+      "modelo": "sonnet"
+    },
+    "verificacion/tester": {
+      "usos": 7,
+      "ultimo_uso": "2026-06-25",
+      "proyecto": "IL017",
+      "modelo": "sonnet"
+    },
+    "testing/e2e-cypress": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null,
+      "modelo": "sonnet"
+    },
+    "testing/unit-backend": {
+      "usos": 1,
+      "ultimo_uso": "2026-06-22",
+      "proyecto": "AgroEnvios",
+      "modelo": "sonnet"
+    },
+    "infra/devops": {
+      "usos": 0,
+      "ultimo_uso": null,
+      "proyecto": null,
+      "modelo": "sonnet"
+    },
+    "documentacion/tecnica": {
+      "usos": 7,
+      "ultimo_uso": "2026-07-15",
+      "proyecto": "ArchieTeam",
+      "modelo": "sonnet"
+    }
+  }
+}
