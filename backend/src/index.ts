@@ -6,6 +6,7 @@ import { authRoutes } from './routes/auth.routes';
 import { presupuestosRoutes } from './routes/presupuestos.routes';
 import { serviciosRoutes } from './routes/servicios.routes';
 import { dashboardRoutes } from './routes/dashboard.routes';
+import { simuladorRoutes } from './routes/simulador.routes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/presupuestos', presupuestosRoutes);
 app.use('/api/servicios', serviciosRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/simulador', simuladorRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -68,3 +68,25 @@ model Configuracion {
 
   @@map("configuracion")
 }
+
+model Cotizacion {
+  id                 Int      @id @default(autoincrement())
+  nombre             String   @default("")
+  valorVehiculo      Decimal  @db.Decimal(14, 2) @map("valor_vehiculo")
+  montoFinanciar     Decimal  @db.Decimal(14, 2) @map("monto_financiar")
+  plazo              Int
+  tna                Decimal  @db.Decimal(6, 2)
+  sistema            String   @default("frances")
+  condicion          String   @default("0km")
+  seguroAutoAnual    Decimal  @db.Decimal(6, 2) @default(0) @map("seguro_auto_anual")
+  seguroVidaMensual  Decimal  @db.Decimal(6, 4) @default(0) @map("seguro_vida_mensual")
+  gastoAdminMensual  Decimal  @db.Decimal(12, 2) @default(0) @map("gasto_admin_mensual")
+  ivaIntereses       Boolean  @default(false) @map("iva_intereses")
+  cuotaPura          Decimal  @db.Decimal(14, 2) @map("cuota_pura")
+  cuotaTotal         Decimal  @db.Decimal(14, 2) @map("cuota_total")
+  totalIntereses     Decimal  @db.Decimal(14, 2) @map("total_intereses")
+  costoTotal         Decimal  @db.Decimal(14, 2) @map("costo_total")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("cotizaciones")
+}

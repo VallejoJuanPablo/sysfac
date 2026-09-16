@@ -29,6 +29,13 @@ export const routes: Routes = [
             (m) => m.PresupuestoCreateComponent
           ),
       },
+      {
+        path: 'simulador',
+        loadComponent: () =>
+          import('./features/simulador/simulador.component').then(
+            (m) => m.SimuladorComponent
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
