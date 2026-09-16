@@ -105,6 +105,52 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Generar PDF directo (sin guardar)
+router.post('/pdf', async (req: AuthRequest, res: Response) => {
+  try {
+    const { valorVehiculo, montoFinanciar, plazo, tna } = req.body;
+    if (!valorVehiculo || !montoFinanciar || !plazo || !tna) {
+      res.status(400).json({ error: 'Faltan campos obligatorios' });
+      return;
+    }
+
+    const data = {
+      nombre: req.body.nombre || '',
+      valorVehiculo,
+      montoFinanciar,
+      plazo,
+      tna,
+      sistema: req.body.sistema || 'frances',
+      condicion: req.body.condicion || '0km',
+      seguroAutoAnual: req.body.seguroAutoAnual || 0,
+      seguroVidaMensual: req.body.seguroVidaMensual || 0,
+      gastoAdminMensual: req.body.gastoAdminMensual || 0,
+      ivaIntereses: req.body.ivaIntereses || false,
+      cuotaPura: req.body.cuotaPura || 0,
+      cuotaTotal: req.body.cuotaTotal || 0,
+      totalIntereses: req.body.totalIntereses || 0,
+      costoTotal: req.body.costoTotal || 0,
+      createdAt: new Date(),
+    };
+
+    const pdfBuffer = await generarPdfCotizacion(data);
+
+    const nombreStr = (data.nombre || 'cotizacion')
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+    const fechaStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `simulacion_${fechaStr}_${nombreStr}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Error al generar PDF directo:', err);
+    res.status(500).json({ error: 'Error al generar PDF' });
+  }
+});
+
 // Generar PDF de cotización
 router.get('/:id/pdf', async (req: AuthRequest, res: Response) => {
   try {

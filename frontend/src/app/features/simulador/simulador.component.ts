@@ -183,6 +183,13 @@ interface Cotizacion {
               class="px-6 py-2.5 border border-slate-300 text-slate-600 rounded-lg font-medium hover:bg-slate-50 transition">
               Limpiar
             </button>
+            <button (click)="descargarPdfDirecto()"
+              class="px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Descargar PDF
+            </button>
           }
         </div>
       </div>
@@ -659,6 +666,47 @@ export class SimuladorComponent implements OnInit {
           Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la cotización' });
         },
       });
+  }
+
+  descargarPdfDirecto() {
+    Swal.fire({
+      title: 'Generando PDF...',
+      text: this.nombre || 'Simulación',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    this.http.post('/api/simulador/pdf', {
+      nombre: this.nombre,
+      valorVehiculo: this.valorVehiculo,
+      montoFinanciar: this.montoFinanciar,
+      plazo: Number(this.plazo),
+      tna: this.tna,
+      sistema: this.sistema,
+      condicion: this.condicion,
+      seguroAutoAnual: this.seguroAutoAnual,
+      seguroVidaMensual: this.seguroVidaMensual,
+      gastoAdminMensual: this.gastoAdminMensual,
+      ivaIntereses: this.ivaIntereses,
+      cuotaPura: this.resultCuotaPura(),
+      cuotaTotal: this.resultCuotaTotal(),
+      totalIntereses: this.resultTotalIntereses(),
+      costoTotal: this.resultCostoTotal(),
+    }, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `simulacion_${this.nombre?.replace(/\s+/g, '_') || 'cotizacion'}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        Swal.fire({ icon: 'success', title: 'PDF generado', timer: 1500, showConfirmButton: false });
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el PDF' });
+      },
+    });
   }
 
   verCotizacion(c: Cotizacion) {
