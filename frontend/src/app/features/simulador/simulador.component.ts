@@ -67,17 +67,17 @@ interface Cotizacion {
           <!-- Valor vehículo -->
           <div>
             <label class="block text-sm font-medium text-slate-600 mb-1">Valor del vehículo *</label>
-            <input type="number" [(ngModel)]="valorVehiculo" min="0"
+            <input type="text" [value]="formatNum(valorVehiculo)" (input)="valorVehiculo = parseNum($event)" inputmode="numeric"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="25000000" />
+              placeholder="25.000.000" />
           </div>
 
           <!-- Monto a financiar -->
           <div>
             <label class="block text-sm font-medium text-slate-600 mb-1">Monto a financiar *</label>
-            <input type="number" [(ngModel)]="montoFinanciar" min="0"
+            <input type="text" [value]="formatNum(montoFinanciar)" (input)="montoFinanciar = parseNum($event)" inputmode="numeric"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="17500000" />
+              placeholder="17.500.000" />
             @if (valorVehiculo > 0 && montoFinanciar > 0) {
               <span class="text-xs text-slate-400 mt-0.5 inline-block">{{ ((montoFinanciar / valorVehiculo) * 100).toFixed(1) }}% del valor</span>
             }
@@ -717,5 +717,18 @@ export class SimuladorComponent implements OnInit {
   formatFecha(fecha: string): string {
     const d = new Date(fecha);
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  }
+
+  formatNum(value: number): string {
+    if (!value) return '';
+    return value.toLocaleString('es-AR');
+  }
+
+  parseNum(event: Event): number {
+    const input = event.target as HTMLInputElement;
+    const raw = input.value.replace(/\D/g, '');
+    const num = parseInt(raw, 10) || 0;
+    input.value = num ? num.toLocaleString('es-AR') : '';
+    return num;
   }
 }
