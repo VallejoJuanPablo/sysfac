@@ -2,6 +2,8 @@ import puppeteer from 'puppeteer';
 import { Decimal } from '@prisma/client/runtime/library';
 
 interface CotizacionData {
+  tipoPrestamo?: string;
+  entidad?: string;
   nombre: string;
   valorVehiculo: Decimal;
   montoFinanciar: Decimal;
@@ -117,6 +119,9 @@ function generarTabla(data: CotizacionData): FilaCuota[] {
 
 export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer> {
   const filas = generarTabla(data);
+  const esPrendario = (data.tipoPrestamo || 'prendario') === 'prendario';
+  const entidad = data.entidad || 'Reka Cobranzas';
+  const tituloPrestamo = esPrendario ? 'Simulación de Crédito Prendario' : 'Simulación de Préstamo Personal';
 
   const totalIntereses = filas.reduce((s, f) => s + f.interes, 0);
   const costoTotal = filas.reduce((s, f) => s + f.cuotaTotal, 0);
@@ -131,7 +136,7 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
         <td class="money">${formatMoney(f.amortizacion)}</td>
         <td class="money">${formatMoney(f.interes)}</td>
         <td class="money">${formatMoney(f.cuotaPura)}</td>
-        <td class="money">${formatMoney(f.seguroAuto)}</td>
+        ${esPrendario ? `<td class="money">${formatMoney(f.seguroAuto)}</td>` : ''}
         <td class="money">${formatMoney(f.seguroVida)}</td>
         <td class="money">${formatMoney(f.iva)}</td>
         <td class="money total">${formatMoney(f.cuotaTotal)}</td>
@@ -252,9 +257,9 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
     <body>
       <div class="header">
         <div>
-          <div class="brand-title">Reka cobranzas</div>
-          <h1>Simulación de Crédito Prendario</h1>
-          <div class="subtitle">${data.nombre || 'Sin nombre'} — Vehículo ${data.condicion.toUpperCase()}</div>
+          <div class="brand-title">${entidad}</div>
+          <h1>${tituloPrestamo}</h1>
+          <div class="subtitle">${data.nombre || 'Sin nombre'}${esPrendario ? ` — Vehículo ${data.condicion.toUpperCase()}` : ''}</div>
         </div>
         <div class="date">
           Generado: ${formatDate(data.createdAt)}<br>
@@ -263,13 +268,13 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
       </div>
 
       <div class="params">
-        <div class="param"><span class="label">Valor vehículo:</span> <span class="value">${formatMoney(num(data.valorVehiculo))}</span></div>
-        <div class="param"><span class="label">Financiado:</span> <span class="value">${formatMoney(num(data.montoFinanciar))}</span></div>
+        ${esPrendario ? `<div class="param"><span class="label">Valor vehículo:</span> <span class="value">${formatMoney(num(data.valorVehiculo))}</span></div>` : ''}
+        <div class="param"><span class="label">${esPrendario ? 'Financiado' : 'Monto prestado'}:</span> <span class="value">${formatMoney(num(data.montoFinanciar))}</span></div>
         <div class="param"><span class="label">Plazo:</span> <span class="value">${data.plazo} meses</span></div>
         <div class="param"><span class="label">TNA:</span> <span class="value">${formatPct(num(data.tna))}</span></div>
         <div class="param"><span class="label">TEA:</span> <span class="value">${formatPct(tea)}</span></div>
         <div class="param"><span class="label">Sistema:</span> <span class="value">${data.sistema === 'frances' ? 'Francés' : 'Alemán'}</span></div>
-        <div class="param"><span class="label">Seguro auto:</span> <span class="value">${formatPct(num(data.seguroAutoAnual))}</span></div>
+        ${esPrendario ? `<div class="param"><span class="label">Seguro auto:</span> <span class="value">${formatPct(num(data.seguroAutoAnual))}</span></div>` : ''}
         <div class="param"><span class="label">IVA int.:</span> <span class="value">${data.ivaIntereses ? 'Sí (21%)' : 'No'}</span></div>
       </div>
 
@@ -300,7 +305,7 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
             <th>Amortización</th>
             <th>Interés</th>
             <th>Cuota Pura</th>
-            <th>Seg. Auto</th>
+            ${esPrendario ? '<th>Seg. Auto</th>' : ''}
             <th>Seg. Vida</th>
             <th>IVA Int.</th>
             <th>Cuota Total</th>

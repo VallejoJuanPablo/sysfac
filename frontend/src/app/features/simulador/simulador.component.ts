@@ -44,7 +44,27 @@ interface Cotizacion {
   imports: [FormsModule, CurrencyPipe],
   template: `
     <div>
-      <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-6">Simulador de Crédito Prendario</h2>
+      <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-6">Simulador de {{ tipoPrestamo === 'prendario' ? 'Crédito Prendario' : 'Préstamo Personal' }}</h2>
+
+      <!-- SELECTORES PRINCIPALES -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Tipo de préstamo</label>
+          <select [(ngModel)]="tipoPrestamo" (ngModelChange)="onTipoChange()"
+            class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+            <option value="prendario">Préstamo Prendario</option>
+            <option value="personal">Préstamo Personal</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">A nombre de</label>
+          <select [(ngModel)]="entidad"
+            class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+            <option value="Reka Cobranzas">Reka Cobranzas</option>
+            <option value="MC Inversiones y Servicios">MC Inversiones y Servicios</option>
+          </select>
+        </div>
+      </div>
 
       <!-- FORMULARIO -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 sm:p-6 mb-6">
@@ -61,24 +81,26 @@ interface Cotizacion {
             <label class="block text-sm font-medium text-slate-600 mb-1">Nombre / Referencia</label>
             <input type="text" [(ngModel)]="nombre"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="Ej: Toyota Corolla 2024" />
+              [placeholder]="tipoPrestamo === 'prendario' ? 'Ej: Toyota Corolla 2024' : 'Ej: Juan Pérez'" />
           </div>
 
-          <!-- Valor vehículo -->
-          <div>
-            <label class="block text-sm font-medium text-slate-600 mb-1">Valor del vehículo *</label>
-            <input type="text" [value]="formatNum(valorVehiculo)" (input)="valorVehiculo = parseNum($event)" inputmode="numeric"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-              placeholder="25.000.000" />
-          </div>
+          @if (tipoPrestamo === 'prendario') {
+            <!-- Valor vehículo -->
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Valor del vehículo *</label>
+              <input type="text" [value]="formatNum(valorVehiculo)" (input)="valorVehiculo = parseNum($event)" inputmode="numeric"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                placeholder="25.000.000" />
+            </div>
+          }
 
           <!-- Monto a financiar -->
           <div>
-            <label class="block text-sm font-medium text-slate-600 mb-1">Monto a financiar *</label>
+            <label class="block text-sm font-medium text-slate-600 mb-1">{{ tipoPrestamo === 'prendario' ? 'Monto a financiar' : 'Monto a prestar' }} *</label>
             <input type="text" [value]="formatNum(montoFinanciar)" (input)="montoFinanciar = parseNum($event)" inputmode="numeric"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
               placeholder="17.500.000" />
-            @if (valorVehiculo > 0 && montoFinanciar > 0) {
+            @if (tipoPrestamo === 'prendario' && valorVehiculo > 0 && montoFinanciar > 0) {
               <span class="text-xs text-slate-400 mt-0.5 inline-block">{{ ((montoFinanciar / valorVehiculo) * 100).toFixed(1) }}% del valor</span>
             }
           </div>
@@ -118,15 +140,17 @@ interface Cotizacion {
             </select>
           </div>
 
-          <!-- Condición -->
-          <div>
-            <label class="block text-sm font-medium text-slate-600 mb-1">Condición</label>
-            <select [(ngModel)]="condicion"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
-              <option value="0km">0 km</option>
-              <option value="usado">Usado</option>
-            </select>
-          </div>
+          @if (tipoPrestamo === 'prendario') {
+            <!-- Condición -->
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Condición</label>
+              <select [(ngModel)]="condicion"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+                <option value="0km">0 km</option>
+                <option value="usado">Usado</option>
+              </select>
+            </div>
+          }
         </div>
 
         <!-- Gastos adicionales (collapsible) -->
@@ -140,12 +164,14 @@ interface Cotizacion {
 
         @if (showGastos) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg mb-4">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Seguro auto anual (%)</label>
-              <input type="number" [(ngModel)]="seguroAutoAnual" min="0" max="20" step="0.5"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                placeholder="5" />
-            </div>
+            @if (tipoPrestamo === 'prendario') {
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1">Seguro auto anual (%)</label>
+                <input type="number" [(ngModel)]="seguroAutoAnual" min="0" max="20" step="0.5"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  placeholder="5" />
+              </div>
+            }
             <div>
               <label class="block text-xs font-medium text-slate-500 mb-1">Seguro vida mensual (%)</label>
               <input type="number" [(ngModel)]="seguroVidaMensual" min="0" max="1" step="0.01"
@@ -171,7 +197,7 @@ interface Cotizacion {
         <!-- Botón calcular -->
         <div class="flex flex-col sm:flex-row gap-3">
           <button (click)="calcular()"
-            [disabled]="!valorVehiculo || !montoFinanciar || !tna"
+            [disabled]="(tipoPrestamo === 'prendario' && !valorVehiculo) || !montoFinanciar || !tna"
             class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -270,7 +296,9 @@ interface Cotizacion {
                     <span>Capital: {{ f.amortizacion | arsCurrency }}</span>
                     <span>Interés: {{ f.interes | arsCurrency }}</span>
                     <span>Saldo: {{ f.saldoFinal | arsCurrency }}</span>
-                    <span>Seg. auto: {{ f.seguroAuto | arsCurrency }}</span>
+                    @if (tipoPrestamo === 'prendario') {
+                      <span>Seg. auto: {{ f.seguroAuto | arsCurrency }}</span>
+                    }
                   </div>
                 </div>
               }
@@ -286,7 +314,9 @@ interface Cotizacion {
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Amortización</th>
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Interés</th>
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Cuota Pura</th>
-                    <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Seg. Auto</th>
+                    @if (tipoPrestamo === 'prendario') {
+                      <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Seg. Auto</th>
+                    }
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Seg. Vida</th>
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">IVA</th>
                     <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase bg-indigo-50">Cuota Total</th>
@@ -301,7 +331,9 @@ interface Cotizacion {
                       <td class="px-3 py-2 text-right text-slate-600">{{ f.amortizacion | arsCurrency }}</td>
                       <td class="px-3 py-2 text-right text-slate-600">{{ f.interes | arsCurrency }}</td>
                       <td class="px-3 py-2 text-right text-slate-700 font-medium">{{ f.cuotaPura | arsCurrency }}</td>
-                      <td class="px-3 py-2 text-right text-slate-500">{{ f.seguroAuto | arsCurrency }}</td>
+                      @if (tipoPrestamo === 'prendario') {
+                        <td class="px-3 py-2 text-right text-slate-500">{{ f.seguroAuto | arsCurrency }}</td>
+                      }
                       <td class="px-3 py-2 text-right text-slate-500">{{ f.seguroVida | arsCurrency }}</td>
                       <td class="px-3 py-2 text-right text-slate-500">{{ f.iva | arsCurrency }}</td>
                       <td class="px-3 py-2 text-right font-bold text-slate-800 bg-indigo-50/50">{{ f.cuotaTotal | arsCurrency }}</td>
@@ -512,6 +544,8 @@ export class SimuladorComponent implements OnInit {
   private http = inject(HttpClient);
 
   // Form inputs
+  tipoPrestamo = 'prendario';
+  entidad = 'Reka Cobranzas';
   nombre = '';
   valorVehiculo = 0;
   montoFinanciar = 0;
@@ -551,13 +585,23 @@ export class SimuladorComponent implements OnInit {
     });
   }
 
+  onTipoChange() {
+    this.limpiar();
+    if (this.tipoPrestamo === 'personal') {
+      this.valorVehiculo = 0;
+      this.condicion = '0km';
+      this.seguroAutoAnual = 0;
+    }
+  }
+
   calcular() {
-    if (!this.valorVehiculo || !this.montoFinanciar || !this.tna) return;
+    if (this.tipoPrestamo === 'prendario' && !this.valorVehiculo) return;
+    if (!this.montoFinanciar || !this.tna) return;
 
     const capital = this.montoFinanciar;
     const tasaMensual = this.tna / 100 / 12;
     const n = Number(this.plazo);
-    const segAutoMes = this.valorVehiculo * (this.seguroAutoAnual / 100) / 12;
+    const segAutoMes = this.tipoPrestamo === 'prendario' ? this.valorVehiculo * (this.seguroAutoAnual / 100) / 12 : 0;
     const segVidaMes = this.seguroVidaMensual / 100;
     const gastoAdmin = this.gastoAdminMensual;
     const conIva = this.ivaIntereses;
@@ -633,6 +677,8 @@ export class SimuladorComponent implements OnInit {
 
     this.http
       .post<Cotizacion>('/api/simulador', {
+        tipoPrestamo: this.tipoPrestamo,
+        entidad: this.entidad,
         nombre: this.nombre,
         valorVehiculo: this.valorVehiculo,
         montoFinanciar: this.montoFinanciar,
@@ -678,6 +724,8 @@ export class SimuladorComponent implements OnInit {
     });
 
     this.http.post('/api/simulador/pdf', {
+      tipoPrestamo: this.tipoPrestamo,
+      entidad: this.entidad,
       nombre: this.nombre,
       valorVehiculo: this.valorVehiculo,
       montoFinanciar: this.montoFinanciar,

@@ -108,15 +108,17 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
 // Generar PDF directo (sin guardar)
 router.post('/pdf', async (req: AuthRequest, res: Response) => {
   try {
-    const { valorVehiculo, montoFinanciar, plazo, tna } = req.body;
-    if (!valorVehiculo || !montoFinanciar || !plazo || !tna) {
+    const { montoFinanciar, plazo, tna } = req.body;
+    if (!montoFinanciar || !plazo || !tna) {
       res.status(400).json({ error: 'Faltan campos obligatorios' });
       return;
     }
 
     const data = {
+      tipoPrestamo: req.body.tipoPrestamo || 'prendario',
+      entidad: req.body.entidad || 'Reka Cobranzas',
       nombre: req.body.nombre || '',
-      valorVehiculo,
+      valorVehiculo: req.body.valorVehiculo || 0,
       montoFinanciar,
       plazo,
       tna,
