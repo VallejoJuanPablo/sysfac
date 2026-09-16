@@ -698,7 +698,8 @@ export class SimuladorComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `simulacion_${this.nombre?.replace(/\s+/g, '_') || 'cotizacion'}.pdf`;
+        const hoy = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        a.download = `simulacion_${hoy}_${this.nombre?.replace(/\s+/g, '_') || 'cotizacion'}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
         Swal.fire({ icon: 'success', title: 'PDF generado', timer: 1500, showConfirmButton: false });
@@ -727,7 +728,8 @@ export class SimuladorComponent implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `simulacion_${c.nombre?.replace(/\s+/g, '_') || c.id}.pdf`;
+        const fecha = new Date(c.createdAt).toISOString().slice(0, 10).replace(/-/g, '');
+        a.download = `simulacion_${fecha}_${c.nombre?.replace(/\s+/g, '_') || c.id}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
         Swal.fire({ icon: 'success', title: 'PDF generado', timer: 1500, showConfirmButton: false });
