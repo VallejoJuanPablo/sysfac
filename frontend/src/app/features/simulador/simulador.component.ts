@@ -88,6 +88,9 @@ interface Cotizacion {
             <label class="block text-sm font-medium text-slate-600 mb-1">Plazo (meses) *</label>
             <select [(ngModel)]="plazo"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+              <option [value]="3">3 meses</option>
+              <option [value]="6">6 meses</option>
+              <option [value]="9">9 meses</option>
               <option [value]="12">12 meses</option>
               <option [value]="18">18 meses</option>
               <option [value]="24">24 meses</option>

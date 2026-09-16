@@ -39,7 +39,7 @@ function num(v: Decimal | number): number {
 }
 
 function formatMoney(value: number): string {
-  return '$' + Math.round(value).toLocaleString('es-AR');
+  return '$' + value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatPct(value: number): string {
@@ -162,6 +162,13 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
           padding-bottom: 12px;
           border-bottom: 2px solid #4f46e5;
         }
+        .brand-title {
+          font-size: 26px;
+          font-weight: 800;
+          color: #0f172a;
+          margin-bottom: 4px;
+          letter-spacing: 0.5px;
+        }
         .header h1 {
           font-size: 20px;
           color: #4f46e5;
@@ -245,6 +252,7 @@ export async function generarPdfCotizacion(data: CotizacionData): Promise<Buffer
     <body>
       <div class="header">
         <div>
+          <div class="brand-title">Reka cobranzas</div>
           <h1>Simulación de Crédito Prendario</h1>
           <div class="subtitle">${data.nombre || 'Sin nombre'} — Vehículo ${data.condicion.toUpperCase()}</div>
         </div>

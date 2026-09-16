@@ -6,6 +6,6 @@ export class CurrencyPipe implements PipeTransform {
     if (value === null || value === undefined) return '$0';
     const num = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(num)) return '$0';
-    return '$' + Math.round(num).toLocaleString('es-AR');
+    return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 }
