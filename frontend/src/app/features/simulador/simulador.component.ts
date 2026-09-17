@@ -254,26 +254,6 @@ interface Cotizacion {
           </span>
         </div>
 
-        <!-- Acciones -->
-        <div class="flex flex-col sm:flex-row gap-3 mb-6">
-          <button (click)="guardarCotizacion()"
-            [disabled]="saving()"
-            class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
-            @if (saving()) {
-              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-              </svg>
-              Guardando...
-            } @else {
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              Guardar cotización
-            }
-          </button>
-        </div>
-
         <!-- Tabla de amortización -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden mb-6">
           <div class="px-4 sm:px-6 py-3 border-b border-slate-200 flex items-center justify-between">
@@ -661,6 +641,8 @@ export class SimuladorComponent implements OnInit {
     this.resultTotalIntereses.set(filas.reduce((s, f) => s + f.interes, 0));
     this.resultCostoTotal.set(filas.reduce((s, f) => s + f.cuotaTotal, 0));
     this.resultTea.set((Math.pow(1 + tasaMensual, 12) - 1) * 100);
+
+    this.guardarCotizacion();
   }
 
   limpiar() {
@@ -699,17 +681,9 @@ export class SimuladorComponent implements OnInit {
         next: () => {
           this.saving.set(false);
           this.loadCotizaciones();
-          this.showCotizaciones = true;
-          Swal.fire({
-            icon: 'success',
-            title: 'Cotización guardada',
-            timer: 1500,
-            showConfirmButton: false,
-          });
         },
         error: () => {
           this.saving.set(false);
-          Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar la cotización' });
         },
       });
   }
