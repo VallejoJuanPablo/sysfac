@@ -108,18 +108,36 @@ interface Cotizacion {
           <!-- Plazo -->
           <div>
             <label class="block text-sm font-medium text-slate-600 mb-1">Plazo (meses) *</label>
-            <select [(ngModel)]="plazo"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
-              <option [value]="3">3 meses</option>
-              <option [value]="6">6 meses</option>
-              <option [value]="9">9 meses</option>
-              <option [value]="12">12 meses</option>
-              <option [value]="18">18 meses</option>
-              <option [value]="24">24 meses</option>
-              <option [value]="36">36 meses</option>
-              <option [value]="48">48 meses</option>
-              <option [value]="60">60 meses</option>
-            </select>
+            @if (!plazoCustom) {
+              <div class="flex gap-2">
+                <select [(ngModel)]="plazo"
+                  class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-white">
+                  <option [value]="3">3 meses</option>
+                  <option [value]="6">6 meses</option>
+                  <option [value]="9">9 meses</option>
+                  <option [value]="12">12 meses</option>
+                  <option [value]="18">18 meses</option>
+                  <option [value]="24">24 meses</option>
+                  <option [value]="36">36 meses</option>
+                  <option [value]="48">48 meses</option>
+                  <option [value]="60">60 meses</option>
+                </select>
+                <button (click)="plazoCustom = true; plazo = 1" type="button" title="Ingresar manualmente"
+                  class="px-2.5 py-2 border border-slate-300 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition text-sm">
+                  ✎
+                </button>
+              </div>
+            } @else {
+              <div class="flex gap-2">
+                <input type="number" [(ngModel)]="plazo" min="1" max="120"
+                  class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                  placeholder="Cantidad de meses" />
+                <button (click)="plazoCustom = false; plazo = 12" type="button" title="Volver al listado"
+                  class="px-2.5 py-2 border border-slate-300 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition text-sm">
+                  ☰
+                </button>
+              </div>
+            }
           </div>
 
           <!-- TNA -->
@@ -538,6 +556,7 @@ export class SimuladorComponent implements OnInit {
   gastoAdminMensual = 0;
   ivaIntereses = false;
 
+  plazoCustom = false;
   showGastos = false;
   showTabla = true;
   showCotizaciones = false;
