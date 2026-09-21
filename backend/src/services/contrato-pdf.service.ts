@@ -1,15 +1,12 @@
 import puppeteer from 'puppeteer';
 
 interface ContratoData {
-  // Entidad y tipo
   entidad: string;
   tipoPrestamo: string;
-  // Deudor
   deudorNombre: string;
   deudorDni: string;
   deudorDomicilio: string;
   deudorTelefono: string;
-  // Crédito
   nombre: string;
   valorVehiculo: number;
   montoFinanciar: number;
@@ -17,10 +14,28 @@ interface ContratoData {
   tna: number;
   sistema: string;
   condicion: string;
+  seguroAutoAnual: number;
+  seguroVidaMensual: number;
+  gastoAdminMensual: number;
+  ivaIntereses: boolean;
   cuotaPura: number;
   cuotaTotal: number;
   totalIntereses: number;
   costoTotal: number;
+}
+
+interface FilaCuota {
+  nro: number;
+  saldoInicial: number;
+  amortizacion: number;
+  interes: number;
+  cuotaPura: number;
+  seguroAuto: number;
+  seguroVida: number;
+  gastoAdmin: number;
+  iva: number;
+  cuotaTotal: number;
+  saldoFinal: number;
 }
 
 function formatMoney(value: number): string {
@@ -47,28 +62,106 @@ function numberToWords(n: number): string {
   return String(n);
 }
 
+function generarTabla(data: ContratoData): FilaCuota[] {
+  const capital = data.montoFinanciar;
+  const tasaMensual = data.tna / 100 / 12;
+  const n = data.plazo;
+  const esPrendario = data.tipoPrestamo === 'prendario';
+  const seguroAutoMes = esPrendario ? data.valorVehiculo * (data.seguroAutoAnual / 100) / 12 : 0;
+  const segVidaMes = data.seguroVidaMensual / 100;
+  const gastoAdmin = data.gastoAdminMensual;
+  const conIva = data.ivaIntereses;
+  const esFrances = data.sistema === 'frances';
+
+  let cuotaPuraFrances = 0;
+  if (esFrances) {
+    if (tasaMensual === 0) {
+      cuotaPuraFrances = capital / n;
+    } else {
+      const factor = Math.pow(1 + tasaMensual, n);
+      cuotaPuraFrances = capital * (tasaMensual * factor) / (factor - 1);
+    }
+  }
+
+  const amortFija = capital / n;
+  const filas: FilaCuota[] = [];
+  let saldo = capital;
+
+  for (let k = 1; k <= n; k++) {
+    const interes = saldo * tasaMensual;
+    let amortizacion: number;
+    let cuotaPura: number;
+
+    if (esFrances) {
+      cuotaPura = cuotaPuraFrances;
+      amortizacion = cuotaPura - interes;
+    } else {
+      amortizacion = amortFija;
+      cuotaPura = amortizacion + interes;
+    }
+
+    const seguroVida = saldo * segVidaMes;
+    const iva = conIva ? interes * 0.21 : 0;
+    const cuotaTotal = cuotaPura + seguroAutoMes + seguroVida + gastoAdmin + iva;
+
+    filas.push({
+      nro: k,
+      saldoInicial: saldo,
+      amortizacion,
+      interes,
+      cuotaPura,
+      seguroAuto: seguroAutoMes,
+      seguroVida,
+      gastoAdmin,
+      iva,
+      cuotaTotal,
+      saldoFinal: Math.max(0, saldo - amortizacion),
+    });
+
+    saldo -= amortizacion;
+  }
+
+  return filas;
+}
+
 export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
   const hoy = new Date();
   const esPrendario = data.tipoPrestamo === 'prendario';
   const tea = (Math.pow(1 + data.tna / 100 / 12, 12) - 1) * 100;
   const sistemaTexto = data.sistema === 'frances' ? 'Francés (cuota fija)' : 'Alemán (cuota decreciente)';
-  const tipoTexto = esPrendario ? 'Préstamo Prendario' : 'Préstamo Personal';
+  const filas = generarTabla(data);
+  const totalIntereses = filas.reduce((s, f) => s + f.interes, 0);
+  const costoTotal = filas.reduce((s, f) => s + f.cuotaTotal, 0);
 
-  const vehiculoClause = esPrendario ? `
-    <p><strong>TERCERA: DEL BIEN PRENDADO.</strong> El DEUDOR constituye prenda en primer grado sobre el vehículo
-    detallado como "${data.nombre || 'S/D'}", condición <strong>${data.condicion === '0km' ? '0 km' : 'Usado'}</strong>,
+  const filasHtml = filas.map(f => `
+    <tr>
+      <td class="num">${f.nro}</td>
+      <td class="money">${formatMoney(f.cuotaPura)}</td>
+      <td class="money">${formatMoney(f.amortizacion)}</td>
+      <td class="money">${formatMoney(f.interes)}</td>
+      <td class="money bold">${formatMoney(f.cuotaTotal)}</td>
+      <td class="money">${formatMoney(f.saldoFinal)}</td>
+    </tr>`).join('');
+
+  // Cláusula de garantía prendaria
+  const garantiaClause = esPrendario ? `
+    <p><strong>CUARTA: GARANTÍA PRENDARIA.</strong> En garantía del fiel cumplimiento de todas las
+    obligaciones emergentes del presente contrato, EL MUTUARIO constituye prenda en primer grado
+    a favor de EL MUTUANTE sobre el vehículo identificado como
+    <strong>"${data.nombre || 'S/D'}"</strong>, condición <strong>${data.condicion === '0km' ? '0 km' : 'Usado'}</strong>,
     con un valor de mercado de <strong>${formatMoney(data.valorVehiculo)}</strong>.
-    El DEUDOR se compromete a mantener el bien en buen estado de conservación, contratar seguro
-    automotor vigente durante toda la duración del crédito, y no enajenar ni gravar el bien sin
-    autorización escrita del ACREEDOR.</p>
+    EL MUTUARIO se obliga a: a) mantener el bien en perfecto estado de conservación y uso;
+    b) contratar y mantener vigente un seguro automotor con cobertura total durante todo el plazo del mutuo;
+    c) no vender, ceder, permutar, donar ni gravar el bien sin autorización escrita de EL MUTUANTE;
+    d) facilitar la inspección del bien cuando EL MUTUANTE lo requiera.</p>
   ` : '';
 
-  const vehiculoClauseNum = esPrendario ? 'CUARTA' : 'TERCERA';
-  const moraClauseNum = esPrendario ? 'QUINTA' : 'CUARTA';
-  const vencimientoClauseNum = esPrendario ? 'SEXTA' : 'QUINTA';
-  const gastosClauseNum = esPrendario ? 'SÉPTIMA' : 'SEXTA';
-  const jurisdiccionClauseNum = esPrendario ? 'OCTAVA' : 'SÉPTIMA';
-  const ejemplaresClauseNum = esPrendario ? 'NOVENA' : 'OCTAVA';
+  // Numeración dinámica de cláusulas
+  let clauseNum = esPrendario ? 5 : 4;
+  const cn = () => {
+    const nums = ['', 'PRIMERA', 'SEGUNDA', 'TERCERA', 'CUARTA', 'QUINTA', 'SEXTA', 'SÉPTIMA', 'OCTAVA', 'NOVENA', 'DÉCIMA', 'UNDÉCIMA', 'DUODÉCIMA'];
+    return nums[clauseNum++] || `${clauseNum++ - 1}°`;
+  };
 
   const html = `
     <!DOCTYPE html>
@@ -76,57 +169,54 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
     <head>
       <meta charset="UTF-8">
       <style>
-        @page { size: A4; margin: 20mm 25mm; }
+        @page { size: A4; margin: 18mm 22mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
           font-family: 'Times New Roman', Times, serif;
-          font-size: 12px;
+          font-size: 11.5px;
           color: #1a1a1a;
-          line-height: 1.7;
+          line-height: 1.65;
         }
         .header {
           text-align: center;
-          margin-bottom: 30px;
-          padding-bottom: 15px;
+          margin-bottom: 25px;
+          padding-bottom: 12px;
           border-bottom: 2px solid #333;
         }
         .header .brand {
-          font-size: 24px;
+          font-size: 22px;
           font-weight: bold;
           letter-spacing: 1px;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
         }
         .header .title {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: bold;
           text-transform: uppercase;
           letter-spacing: 2px;
           color: #333;
         }
         .header .date {
-          font-size: 11px;
+          font-size: 10px;
           color: #666;
-          margin-top: 8px;
-        }
-        .section {
-          margin-bottom: 15px;
+          margin-top: 6px;
         }
         .section p {
           text-align: justify;
-          margin-bottom: 10px;
-          text-indent: 30px;
+          margin-bottom: 8px;
+          text-indent: 25px;
         }
-        .section p:first-child {
+        .section p.no-indent {
           text-indent: 0;
         }
         .datos-table {
           width: 100%;
           border-collapse: collapse;
-          margin: 15px 0;
-          font-size: 11px;
+          margin: 12px 0;
+          font-size: 10.5px;
         }
         .datos-table td {
-          padding: 6px 10px;
+          padding: 5px 8px;
           border: 1px solid #ccc;
         }
         .datos-table td.label {
@@ -135,10 +225,50 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
           width: 35%;
           color: #333;
         }
+        .cuotas-title {
+          font-size: 13px;
+          font-weight: bold;
+          text-align: center;
+          margin: 20px 0 10px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          page-break-before: auto;
+        }
+        .cuotas-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 9px;
+          margin-bottom: 15px;
+        }
+        .cuotas-table thead th {
+          background: #333;
+          color: white;
+          padding: 5px 4px;
+          text-align: center;
+          font-weight: 600;
+          font-size: 8.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+        .cuotas-table tbody td {
+          padding: 3px 4px;
+          border-bottom: 1px solid #ddd;
+          text-align: right;
+        }
+        .cuotas-table tbody td.num { text-align: center; font-weight: 600; }
+        .cuotas-table tbody td.bold { font-weight: 700; }
+        .cuotas-table tbody tr:nth-child(even) { background: #f9f9f9; }
+        .cuotas-table tfoot td {
+          padding: 5px 4px;
+          border-top: 2px solid #333;
+          font-weight: bold;
+          text-align: right;
+          font-size: 9.5px;
+        }
         .firmas {
           display: flex;
           justify-content: space-between;
-          margin-top: 80px;
+          margin-top: 60px;
           page-break-inside: avoid;
         }
         .firma-box {
@@ -147,64 +277,69 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         }
         .firma-line {
           border-top: 1px solid #333;
-          padding-top: 8px;
-          font-size: 11px;
-        }
-        .firma-line .name {
-          font-weight: bold;
-        }
-        .firma-line .role {
+          padding-top: 6px;
           font-size: 10px;
-          color: #666;
         }
+        .firma-line .name { font-weight: bold; }
+        .firma-line .role { font-size: 9px; color: #666; }
         .footer {
-          margin-top: 40px;
+          margin-top: 30px;
           text-align: center;
-          font-size: 9px;
+          font-size: 8px;
           color: #999;
           border-top: 1px solid #ddd;
-          padding-top: 10px;
+          padding-top: 8px;
         }
       </style>
     </head>
     <body>
       <div class="header">
         <div class="brand">${data.entidad}</div>
-        <div class="title">Contrato de ${tipoTexto}</div>
+        <div class="title">Contrato de Mutuo${esPrendario ? ' con Garantía Prendaria' : ''}</div>
         <div class="date">${formatDate(hoy)}</div>
       </div>
 
       <div class="section">
-        <p>Entre <strong>${data.entidad}</strong>, en adelante "EL ACREEDOR", y
+        <p class="no-indent">En la ciudad de ______________, a los ${hoy.getDate()} días del mes de
+        ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][hoy.getMonth()]}
+        de ${hoy.getFullYear()}, entre:</p>
+
+        <p class="no-indent"><strong>${data.entidad}</strong>, en adelante <strong>"EL MUTUANTE"</strong>, por una parte; y por la otra
         <strong>${data.deudorNombre || '___________________________'}</strong>,
         DNI N° <strong>${data.deudorDni || '________________'}</strong>,
-        con domicilio en <strong>${data.deudorDomicilio || '___________________________________'}</strong>,
+        con domicilio real en <strong>${data.deudorDomicilio || '________________________________________'}</strong>,
         teléfono <strong>${data.deudorTelefono || '________________'}</strong>,
-        en adelante "EL DEUDOR", se celebra el presente contrato de ${tipoTexto.toLowerCase()},
-        sujeto a las siguientes cláusulas:</p>
+        en adelante <strong>"EL MUTUARIO"</strong>, convienen en celebrar el presente
+        <strong>Contrato de Mutuo${esPrendario ? ' con Garantía Prendaria' : ''}</strong>,
+        que se regirá por las siguientes cláusulas y condiciones:</p>
       </div>
 
       <div class="section">
-        <p><strong>PRIMERA: DEL PRÉSTAMO.</strong> EL ACREEDOR otorga al DEUDOR un préstamo
-        por la suma de <strong>${formatMoney(data.montoFinanciar)}</strong>
+        <p><strong>PRIMERA: OBJETO.</strong> EL MUTUANTE entrega en este acto a EL MUTUARIO,
+        en calidad de mutuo, la suma de <strong>${formatMoney(data.montoFinanciar)}</strong>
         (${numberToWords(Math.round(data.montoFinanciar / 1000))} mil pesos),
-        que el DEUDOR declara recibir en este acto de plena conformidad.</p>
+        que EL MUTUARIO declara recibir de plena conformidad, obligándose a restituir
+        dicha suma con más los intereses convenidos, en la forma y plazos estipulados en el presente.</p>
 
-        <p><strong>SEGUNDA: CONDICIONES FINANCIERAS.</strong> El préstamo se regirá por las
-        siguientes condiciones:</p>
+        <p><strong>SEGUNDA: DESTINO.</strong> El capital mutuado será destinado por EL MUTUARIO
+        a ${esPrendario ? `la adquisición del vehículo detallado en la cláusula CUARTA del presente` : 'uso personal'}, declarando conocer que el desvío
+        del destino pactado facultará a EL MUTUANTE a exigir la devolución inmediata del total adeudado.</p>
+
+        <p><strong>TERCERA: CONDICIONES FINANCIERAS.</strong> Las partes acuerdan las siguientes
+        condiciones para la restitución del capital mutuado y sus accesorios:</p>
 
         <table class="datos-table">
           <tr>
-            <td class="label">Monto del préstamo</td>
+            <td class="label">Capital mutuado</td>
             <td>${formatMoney(data.montoFinanciar)}</td>
           </tr>
           ${esPrendario ? `<tr>
-            <td class="label">Valor del vehículo</td>
+            <td class="label">Valor del bien prendado</td>
             <td>${formatMoney(data.valorVehiculo)}</td>
           </tr>` : ''}
           <tr>
-            <td class="label">Plazo</td>
-            <td>${data.plazo} meses (${numberToWords(data.plazo)} meses)</td>
+            <td class="label">Plazo de restitución</td>
+            <td>${data.plazo} (${numberToWords(data.plazo)}) meses</td>
           </tr>
           <tr>
             <td class="label">Tasa Nominal Anual (TNA)</td>
@@ -219,64 +354,139 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
             <td>${sistemaTexto}</td>
           </tr>
           <tr>
-            <td class="label">Valor de la cuota pura</td>
-            <td>${formatMoney(data.cuotaPura)}</td>
+            <td class="label">Cuota pura mensual</td>
+            <td>${formatMoney(filas[0]?.cuotaPura || 0)}</td>
           </tr>
           <tr>
-            <td class="label">Valor de la cuota total (1°)</td>
-            <td>${formatMoney(data.cuotaTotal)}</td>
+            <td class="label">Cuota total mensual (1°)</td>
+            <td>${formatMoney(filas[0]?.cuotaTotal || 0)}</td>
           </tr>
           <tr>
             <td class="label">Total de intereses</td>
-            <td>${formatMoney(data.totalIntereses)}</td>
+            <td>${formatMoney(totalIntereses)}</td>
           </tr>
           <tr>
             <td class="label">Costo financiero total</td>
-            <td>${formatMoney(data.costoTotal)}</td>
+            <td>${formatMoney(costoTotal)}</td>
           </tr>
         </table>
 
-        ${vehiculoClause}
+        ${garantiaClause}
 
-        <p><strong>${vehiculoClauseNum}: FORMA DE PAGO.</strong> El DEUDOR se obliga a pagar
-        el préstamo en <strong>${data.plazo} cuotas mensuales y consecutivas</strong>,
-        venciendo la primera cuota a los treinta (30) días corridos de la fecha del presente contrato.
-        Los pagos deberán realizarse mediante los medios habilitados por EL ACREEDOR.</p>
+        <p><strong>${cn()}: FORMA Y PLAZO DE RESTITUCIÓN.</strong> EL MUTUARIO se obliga a restituir
+        el capital mutuado con más sus intereses en <strong>${data.plazo} (${numberToWords(data.plazo)}) cuotas
+        mensuales y consecutivas</strong>, conforme al plan de pagos que como <strong>Anexo I</strong>
+        forma parte integrante del presente contrato.
+        La primera cuota vencerá a los treinta (30) días corridos de la fecha de suscripción del presente.
+        Las cuotas subsiguientes vencerán en igual día de los meses posteriores.
+        Los pagos deberán efectuarse mediante los medios que EL MUTUANTE habilite a tal efecto.</p>
 
-        <p><strong>${moraClauseNum}: MORA.</strong> La falta de pago de cualquier cuota en su
-        fecha de vencimiento constituirá al DEUDOR en mora de pleno derecho, sin necesidad de
-        interpelación judicial o extrajudicial alguna. En caso de mora, se aplicará un interés
-        punitorio equivalente al 50% de la tasa pactada, calculado sobre el monto impago.</p>
+        <p><strong>${cn()}: INTERESES COMPENSATORIOS.</strong> Las partes pactan una tasa nominal anual
+        del <strong>${data.tna.toFixed(2)}%</strong> (TNA), equivalente a una tasa efectiva anual del
+        <strong>${tea.toFixed(2)}%</strong> (TEA), calculada sobre saldo deudor según sistema de amortización
+        ${sistemaTexto.toLowerCase()}.</p>
 
-        <p><strong>${vencimientoClauseNum}: CADUCIDAD DE PLAZOS.</strong> EL ACREEDOR podrá
-        declarar la caducidad de todos los plazos y exigir el pago total del saldo adeudado cuando:
-        a) el DEUDOR incurra en mora de dos (2) o más cuotas consecutivas;
-        b) el DEUDOR proporcione información falsa;
-        ${esPrendario ? 'c) el bien prendado sufra deterioro significativo o sea enajenado sin autorización;' : ''}
-        ${esPrendario ? 'd)' : 'c)'} se inicie concurso preventivo o quiebra del DEUDOR.</p>
+        <p><strong>${cn()}: MORA.</strong> La falta de pago de cualquier cuota a su vencimiento
+        constituirá a EL MUTUARIO en mora de pleno derecho y sin necesidad de interpelación
+        judicial o extrajudicial alguna (art. 886 del Código Civil y Comercial).
+        Los intereses punitorios se calcularán a una tasa equivalente al <strong>50%</strong>
+        adicional sobre la tasa compensatoria pactada, aplicados sobre el capital impago
+        desde la fecha de vencimiento hasta su efectivo pago.</p>
 
-        <p><strong>${gastosClauseNum}: GASTOS.</strong> Todos los gastos, impuestos, sellados y
-        honorarios que se originen con motivo del presente contrato serán a cargo del DEUDOR.</p>
+        <p><strong>${cn()}: CADUCIDAD DE PLAZOS.</strong> EL MUTUANTE podrá declarar la caducidad
+        de todos los plazos otorgados y exigir el pago íntegro del saldo adeudado, con más
+        intereses y accesorios, en cualquiera de los siguientes supuestos:
+        a) mora en el pago de dos (2) o más cuotas consecutivas o tres (3) alternadas;
+        b) falsedad en los datos proporcionados por EL MUTUARIO;
+        ${esPrendario ? 'c) deterioro, destrucción, venta o gravamen del bien prendado sin autorización; d)' : 'c)'}
+        inicio de concurso preventivo, quiebra o cualquier procedimiento de insolvencia de EL MUTUARIO;
+        ${esPrendario ? 'e)' : 'd)'} incumplimiento de cualquier otra obligación asumida en el presente contrato.</p>
 
-        <p><strong>${jurisdiccionClauseNum}: JURISDICCIÓN.</strong> Para todos los efectos
-        judiciales y extrajudiciales derivados del presente contrato, las partes se someten a
-        la jurisdicción de los Tribunales Ordinarios competentes.</p>
+        <p><strong>${cn()}: GASTOS Y SELLADOS.</strong> Todos los gastos, impuestos, tasas, sellados
+        y honorarios profesionales que se originen con motivo de la celebración, cumplimiento o
+        ejecución del presente contrato serán a exclusivo cargo de EL MUTUARIO.</p>
 
-        <p><strong>${ejemplaresClauseNum}: EJEMPLARES.</strong> El presente contrato se firma en
-        dos (2) ejemplares de un mismo tenor y a un solo efecto, quedando uno en poder de cada parte.</p>
+        <p><strong>${cn()}: DOMICILIOS.</strong> Las partes constituyen domicilios especiales en los
+        indicados en el encabezamiento del presente, donde serán válidas todas las notificaciones
+        judiciales y extrajudiciales. El cambio de domicilio deberá notificarse fehacientemente
+        a la otra parte con una anticipación mínima de cinco (5) días hábiles.</p>
+
+        <p><strong>${cn()}: JURISDICCIÓN.</strong> Para todos los efectos judiciales y extrajudiciales
+        derivados del presente contrato, las partes se someten a la jurisdicción de los
+        Tribunales Ordinarios competentes, renunciando a cualquier otro fuero o jurisdicción
+        que pudiera corresponderles.</p>
+
+        <p><strong>${cn()}: EJEMPLARES.</strong> El presente contrato se firma en dos (2) ejemplares
+        de un mismo tenor y a un solo efecto, quedando uno (1) en poder de cada parte,
+        quienes manifiestan su plena conformidad firmando al pie.</p>
       </div>
 
       <div class="firmas">
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">${data.deudorNombre || '___________________________'}</div>
-            <div class="role">EL DEUDOR — DNI ${data.deudorDni || '________________'}</div>
+            <div class="role">EL MUTUARIO — DNI ${data.deudorDni || '________________'}</div>
           </div>
         </div>
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">${data.entidad}</div>
-            <div class="role">EL ACREEDOR</div>
+            <div class="role">EL MUTUANTE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANEXO I: PLAN DE PAGOS -->
+      <div style="page-break-before: always;"></div>
+
+      <div class="header">
+        <div class="brand">${data.entidad}</div>
+        <div class="title">Anexo I — Plan de Pagos</div>
+        <div class="date">Parte integrante del Contrato de Mutuo — ${formatDate(hoy)}</div>
+      </div>
+
+      <div class="section">
+        <p class="no-indent"><strong>Mutuario:</strong> ${data.deudorNombre || '___________________________'} — DNI ${data.deudorDni || '________________'}</p>
+        <p class="no-indent"><strong>Capital:</strong> ${formatMoney(data.montoFinanciar)} | <strong>TNA:</strong> ${data.tna.toFixed(2)}% | <strong>Sistema:</strong> ${sistemaTexto} | <strong>Plazo:</strong> ${data.plazo} cuotas</p>
+      </div>
+
+      <table class="cuotas-table">
+        <thead>
+          <tr>
+            <th>Cuota</th>
+            <th>Cuota Pura</th>
+            <th>Amortización</th>
+            <th>Interés</th>
+            <th>Cuota Total</th>
+            <th>Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filasHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="text-align:center">TOTAL</td>
+            <td>${formatMoney(filas.reduce((s, f) => s + f.cuotaPura, 0))}</td>
+            <td>${formatMoney(filas.reduce((s, f) => s + f.amortizacion, 0))}</td>
+            <td>${formatMoney(totalIntereses)}</td>
+            <td>${formatMoney(costoTotal)}</td>
+            <td>—</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="firmas">
+        <div class="firma-box">
+          <div class="firma-line">
+            <div class="name">${data.deudorNombre || '___________________________'}</div>
+            <div class="role">EL MUTUARIO</div>
+          </div>
+        </div>
+        <div class="firma-box">
+          <div class="firma-line">
+            <div class="name">${data.entidad}</div>
+            <div class="role">EL MUTUANTE</div>
           </div>
         </div>
       </div>
