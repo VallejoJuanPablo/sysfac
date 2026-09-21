@@ -304,7 +304,9 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][hoy.getMonth()]}
         de ${hoy.getFullYear()}, entre:</p>
 
-        <p class="no-indent"><strong>${data.entidad}</strong>, en adelante <strong>"EL MUTUANTE"</strong>, por una parte; y por la otra
+        <p class="no-indent"><strong>${data.entidad}</strong>, representada por <strong>MATIAS FEDERICO CENTURION</strong>,
+        DNI N° <strong>39.518.531</strong>, con domicilio en <strong>AV. RIO CHICO 5696</strong>,
+        en adelante <strong>"EL MUTUANTE"</strong>, por una parte; y por la otra
         <strong>${data.deudorNombre || '___________________________'}</strong>,
         DNI N° <strong>${data.deudorDni || '________________'}</strong>,
         con domicilio real en <strong>${data.deudorDomicilio || '________________________________________'}</strong>,
@@ -430,8 +432,8 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         </div>
         <div class="firma-box">
           <div class="firma-line">
-            <div class="name">${data.entidad}</div>
-            <div class="role">EL MUTUANTE</div>
+            <div class="name">MATIAS FEDERICO CENTURION</div>
+            <div class="role">EL MUTUANTE — ${data.entidad}</div>
           </div>
         </div>
       </div>
@@ -485,8 +487,8 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         </div>
         <div class="firma-box">
           <div class="firma-line">
-            <div class="name">${data.entidad}</div>
-            <div class="role">EL MUTUANTE</div>
+            <div class="name">MATIAS FEDERICO CENTURION</div>
+            <div class="role">EL MUTUANTE — ${data.entidad}</div>
           </div>
         </div>
       </div>
