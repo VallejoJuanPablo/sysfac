@@ -48,18 +48,58 @@ function formatDate(date: Date): string {
 }
 
 function numberToWords(n: number): string {
-  const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez',
+  const units = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez',
     'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte',
-    'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
+    'veintiún', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
   const tens = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+  const hundreds = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
+  if (n === 0) return 'cero';
   if (n <= 29) return units[n];
   if (n < 100) {
     const t = Math.floor(n / 10);
     const u = n % 10;
     return u === 0 ? tens[t] : `${tens[t]} y ${units[u]}`;
   }
+  if (n < 1000) {
+    const h = Math.floor(n / 100);
+    const rest = n % 100;
+    if (rest === 0) return hundreds[h];
+    return (h === 1 ? 'ciento' : hundreds[h]) + ' ' + numberToWords(rest);
+  }
   return String(n);
+}
+
+function montoEnLetras(valor: number): string {
+  const entero = Math.round(valor);
+  const millones = Math.floor(entero / 1000000);
+  const miles = Math.floor((entero % 1000000) / 1000);
+  const unidades = entero % 1000;
+
+  const partes: string[] = [];
+
+  if (millones > 0) {
+    if (millones === 1) {
+      partes.push('un millón');
+    } else {
+      partes.push(numberToWords(millones) + ' millones');
+    }
+  }
+
+  if (miles > 0) {
+    if (miles === 1) {
+      partes.push('mil');
+    } else {
+      partes.push(numberToWords(miles) + ' mil');
+    }
+  }
+
+  if (unidades > 0) {
+    partes.push(numberToWords(unidades));
+  }
+
+  if (partes.length === 0) return 'cero pesos';
+  return partes.join(' ') + ' pesos';
 }
 
 function generarTabla(data: ContratoData): FilaCuota[] {
@@ -319,7 +359,7 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
       <div class="section">
         <p><strong>PRIMERA: OBJETO.</strong> EL PRESTAMISTA entrega en este acto a EL PRESTATARIO,
         en calidad de mutuo, la suma de <strong>${formatMoney(data.montoFinanciar)}</strong>
-        (${numberToWords(Math.round(data.montoFinanciar / 1000))} mil pesos),
+        (${montoEnLetras(data.montoFinanciar)}),
         que EL PRESTATARIO declara recibir de plena conformidad, obligándose a restituir
         dicha suma con más los intereses convenidos, en la forma y plazos estipulados en el presente.</p>
 
