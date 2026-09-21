@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest, authMiddleware } from '../middleware/auth.middleware';
 import { generarPdfCotizacion } from '../services/simulador-pdf.service';
+import { generarContratoPdf } from '../services/contrato-pdf.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -102,6 +103,53 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error('Error al eliminar cotización:', err);
     res.status(500).json({ error: 'Error al eliminar cotización' });
+  }
+});
+
+// Generar contrato PDF
+router.post('/contrato', async (req: AuthRequest, res: Response) => {
+  try {
+    const { montoFinanciar, plazo, tna } = req.body;
+    if (!montoFinanciar || !plazo || !tna) {
+      res.status(400).json({ error: 'Faltan campos obligatorios' });
+      return;
+    }
+
+    const data = {
+      entidad: req.body.entidad || 'Reka Cobranzas',
+      tipoPrestamo: req.body.tipoPrestamo || 'prendario',
+      deudorNombre: req.body.deudorNombre || '',
+      deudorDni: req.body.deudorDni || '',
+      deudorDomicilio: req.body.deudorDomicilio || '',
+      deudorTelefono: req.body.deudorTelefono || '',
+      nombre: req.body.nombre || '',
+      valorVehiculo: req.body.valorVehiculo || 0,
+      montoFinanciar,
+      plazo,
+      tna,
+      sistema: req.body.sistema || 'frances',
+      condicion: req.body.condicion || '0km',
+      cuotaPura: req.body.cuotaPura || 0,
+      cuotaTotal: req.body.cuotaTotal || 0,
+      totalIntereses: req.body.totalIntereses || 0,
+      costoTotal: req.body.costoTotal || 0,
+    };
+
+    const pdfBuffer = await generarContratoPdf(data);
+
+    const nombreStr = (data.deudorNombre || data.nombre || 'contrato')
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+    const fechaStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const fileName = `contrato_${fechaStr}_${nombreStr}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Error al generar contrato:', err);
+    res.status(500).json({ error: 'Error al generar contrato' });
   }
 });
 

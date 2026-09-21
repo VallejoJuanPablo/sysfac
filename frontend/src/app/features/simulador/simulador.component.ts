@@ -234,6 +234,13 @@ interface Cotizacion {
               </svg>
               Descargar PDF
             </button>
+            <button (click)="showContrato = true"
+              class="px-6 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Generar Contrato
+            </button>
           }
         </div>
       </div>
@@ -461,6 +468,56 @@ interface Cotizacion {
         }
       </div>
 
+      <!-- MODAL CONTRATO -->
+      @if (showContrato) {
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="showContrato = false">
+          <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full" (click)="$event.stopPropagation()">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 class="text-lg font-bold text-slate-800">Datos del deudor</h3>
+              <button (click)="showContrato = false" class="text-slate-400 hover:text-slate-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Nombre completo *</label>
+                <input type="text" [(ngModel)]="deudorNombre"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                  placeholder="Juan Pérez" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">DNI *</label>
+                <input type="text" [(ngModel)]="deudorDni"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                  placeholder="12.345.678" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Domicilio</label>
+                <input type="text" [(ngModel)]="deudorDomicilio"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                  placeholder="Av. Corrientes 1234, CABA" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Teléfono</label>
+                <input type="text" [(ngModel)]="deudorTelefono"
+                  class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition"
+                  placeholder="11 1234-5678" />
+              </div>
+              <button (click)="generarContrato()"
+                [disabled]="!deudorNombre || !deudorDni"
+                class="w-full py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Descargar Contrato PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- MODAL DETALLE -->
       @if (modalCotizacion()) {
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="modalCotizacion.set(null)">
@@ -557,6 +614,11 @@ export class SimuladorComponent implements OnInit {
   ivaIntereses = false;
 
   plazoCustom = false;
+  showContrato = false;
+  deudorNombre = '';
+  deudorDni = '';
+  deudorDomicilio = '';
+  deudorTelefono = '';
   showGastos = false;
   showTabla = true;
   showCotizaciones = false;
@@ -747,6 +809,52 @@ export class SimuladorComponent implements OnInit {
       },
       error: () => {
         Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el PDF' });
+      },
+    });
+  }
+
+  generarContrato() {
+    this.showContrato = false;
+
+    Swal.fire({
+      title: 'Generando contrato...',
+      text: this.deudorNombre,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    this.http.post('/api/simulador/contrato', {
+      entidad: this.entidad,
+      tipoPrestamo: this.tipoPrestamo,
+      deudorNombre: this.deudorNombre,
+      deudorDni: this.deudorDni,
+      deudorDomicilio: this.deudorDomicilio,
+      deudorTelefono: this.deudorTelefono,
+      nombre: this.nombre,
+      valorVehiculo: this.valorVehiculo,
+      montoFinanciar: this.montoFinanciar,
+      plazo: Number(this.plazo),
+      tna: this.tna,
+      sistema: this.sistema,
+      condicion: this.condicion,
+      cuotaPura: this.resultCuotaPura(),
+      cuotaTotal: this.resultCuotaTotal(),
+      totalIntereses: this.resultTotalIntereses(),
+      costoTotal: this.resultCostoTotal(),
+    }, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const hoy = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        a.download = `contrato_${hoy}_${this.deudorNombre?.replace(/\s+/g, '_') || 'deudor'}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        Swal.fire({ icon: 'success', title: 'Contrato generado', timer: 1500, showConfirmButton: false });
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el contrato' });
       },
     });
   }
