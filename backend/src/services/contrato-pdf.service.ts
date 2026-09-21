@@ -146,14 +146,14 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
   // Cláusula de garantía prendaria
   const garantiaClause = esPrendario ? `
     <p><strong>CUARTA: GARANTÍA PRENDARIA.</strong> En garantía del fiel cumplimiento de todas las
-    obligaciones emergentes del presente contrato, EL MUTUARIO constituye prenda en primer grado
-    a favor de EL MUTUANTE sobre el vehículo identificado como
+    obligaciones emergentes del presente contrato, EL PRESTATARIO constituye prenda en primer grado
+    a favor de EL PRESTAMISTA sobre el vehículo identificado como
     <strong>"${data.nombre || 'S/D'}"</strong>, condición <strong>${data.condicion === '0km' ? '0 km' : 'Usado'}</strong>,
     con un valor de mercado de <strong>${formatMoney(data.valorVehiculo)}</strong>.
-    EL MUTUARIO se obliga a: a) mantener el bien en perfecto estado de conservación y uso;
+    EL PRESTATARIO se obliga a: a) mantener el bien en perfecto estado de conservación y uso;
     b) contratar y mantener vigente un seguro automotor con cobertura total durante todo el plazo del mutuo;
-    c) no vender, ceder, permutar, donar ni gravar el bien sin autorización escrita de EL MUTUANTE;
-    d) facilitar la inspección del bien cuando EL MUTUANTE lo requiera.</p>
+    c) no vender, ceder, permutar, donar ni gravar el bien sin autorización escrita de EL PRESTAMISTA;
+    d) facilitar la inspección del bien cuando EL PRESTAMISTA lo requiera.</p>
   ` : '';
 
   // Numeración dinámica de cláusulas
@@ -306,29 +306,29 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
 
         <p class="no-indent"><strong>${data.entidad}</strong>, representada por <strong>MATIAS FEDERICO CENTURION</strong>,
         DNI N° <strong>39.518.531</strong>, con domicilio en <strong>AV. RIO CHICO 5696</strong>,
-        en adelante <strong>"EL MUTUANTE"</strong>, por una parte; y por la otra
+        en adelante <strong>"EL PRESTAMISTA"</strong>, por una parte; y por la otra
         <strong>${data.deudorNombre || '___________________________'}</strong>,
         DNI N° <strong>${data.deudorDni || '________________'}</strong>,
         con domicilio real en <strong>${data.deudorDomicilio || '________________________________________'}</strong>,
         teléfono <strong>${data.deudorTelefono || '________________'}</strong>,
-        en adelante <strong>"EL MUTUARIO"</strong>, convienen en celebrar el presente
+        en adelante <strong>"EL PRESTATARIO"</strong>, convienen en celebrar el presente
         <strong>Contrato de Mutuo${esPrendario ? ' con Garantía Prendaria' : ''}</strong>,
         que se regirá por las siguientes cláusulas y condiciones:</p>
       </div>
 
       <div class="section">
-        <p><strong>PRIMERA: OBJETO.</strong> EL MUTUANTE entrega en este acto a EL MUTUARIO,
+        <p><strong>PRIMERA: OBJETO.</strong> EL PRESTAMISTA entrega en este acto a EL PRESTATARIO,
         en calidad de mutuo, la suma de <strong>${formatMoney(data.montoFinanciar)}</strong>
         (${numberToWords(Math.round(data.montoFinanciar / 1000))} mil pesos),
-        que EL MUTUARIO declara recibir de plena conformidad, obligándose a restituir
+        que EL PRESTATARIO declara recibir de plena conformidad, obligándose a restituir
         dicha suma con más los intereses convenidos, en la forma y plazos estipulados en el presente.</p>
 
-        <p><strong>SEGUNDA: DESTINO.</strong> El capital mutuado será destinado por EL MUTUARIO
+        <p><strong>SEGUNDA: DESTINO.</strong> El capital prestado será destinado por EL PRESTATARIO
         a ${esPrendario ? `la adquisición del vehículo detallado en la cláusula CUARTA del presente` : 'uso personal'}, declarando conocer que el desvío
-        del destino pactado facultará a EL MUTUANTE a exigir la devolución inmediata del total adeudado.</p>
+        del destino pactado facultará a EL PRESTAMISTA a exigir la devolución inmediata del total adeudado.</p>
 
         <p><strong>TERCERA: CONDICIONES FINANCIERAS.</strong> Las partes acuerdan las siguientes
-        condiciones para la restitución del capital mutuado y sus accesorios:</p>
+        condiciones para la restitución del capital prestado y sus accesorios:</p>
 
         <table class="datos-table">
           <tr>
@@ -375,13 +375,13 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
 
         ${garantiaClause}
 
-        <p><strong>${cn()}: FORMA Y PLAZO DE RESTITUCIÓN.</strong> EL MUTUARIO se obliga a restituir
-        el capital mutuado con más sus intereses en <strong>${data.plazo} (${numberToWords(data.plazo)}) cuotas
+        <p><strong>${cn()}: FORMA Y PLAZO DE RESTITUCIÓN.</strong> EL PRESTATARIO se obliga a restituir
+        el capital prestado con más sus intereses en <strong>${data.plazo} (${numberToWords(data.plazo)}) cuotas
         mensuales y consecutivas</strong>, conforme al plan de pagos que como <strong>Anexo I</strong>
         forma parte integrante del presente contrato.
         La primera cuota vencerá a los treinta (30) días corridos de la fecha de suscripción del presente.
         Las cuotas subsiguientes vencerán en igual día de los meses posteriores.
-        Los pagos deberán efectuarse mediante los medios que EL MUTUANTE habilite a tal efecto.</p>
+        Los pagos deberán efectuarse mediante los medios que EL PRESTAMISTA habilite a tal efecto.</p>
 
         <p><strong>${cn()}: INTERESES COMPENSATORIOS.</strong> Las partes pactan una tasa nominal anual
         del <strong>${data.tna.toFixed(2)}%</strong> (TNA), equivalente a una tasa efectiva anual del
@@ -389,24 +389,24 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         ${sistemaTexto.toLowerCase()}.</p>
 
         <p><strong>${cn()}: MORA.</strong> La falta de pago de cualquier cuota a su vencimiento
-        constituirá a EL MUTUARIO en mora de pleno derecho y sin necesidad de interpelación
+        constituirá a EL PRESTATARIO en mora de pleno derecho y sin necesidad de interpelación
         judicial o extrajudicial alguna (art. 886 del Código Civil y Comercial).
         Los intereses punitorios se calcularán a una tasa equivalente al <strong>50%</strong>
         adicional sobre la tasa compensatoria pactada, aplicados sobre el capital impago
         desde la fecha de vencimiento hasta su efectivo pago.</p>
 
-        <p><strong>${cn()}: CADUCIDAD DE PLAZOS.</strong> EL MUTUANTE podrá declarar la caducidad
+        <p><strong>${cn()}: CADUCIDAD DE PLAZOS.</strong> EL PRESTAMISTA podrá declarar la caducidad
         de todos los plazos otorgados y exigir el pago íntegro del saldo adeudado, con más
         intereses y accesorios, en cualquiera de los siguientes supuestos:
         a) mora en el pago de dos (2) o más cuotas consecutivas o tres (3) alternadas;
-        b) falsedad en los datos proporcionados por EL MUTUARIO;
+        b) falsedad en los datos proporcionados por EL PRESTATARIO;
         ${esPrendario ? 'c) deterioro, destrucción, venta o gravamen del bien prendado sin autorización; d)' : 'c)'}
-        inicio de concurso preventivo, quiebra o cualquier procedimiento de insolvencia de EL MUTUARIO;
+        inicio de concurso preventivo, quiebra o cualquier procedimiento de insolvencia de EL PRESTATARIO;
         ${esPrendario ? 'e)' : 'd)'} incumplimiento de cualquier otra obligación asumida en el presente contrato.</p>
 
         <p><strong>${cn()}: GASTOS Y SELLADOS.</strong> Todos los gastos, impuestos, tasas, sellados
         y honorarios profesionales que se originen con motivo de la celebración, cumplimiento o
-        ejecución del presente contrato serán a exclusivo cargo de EL MUTUARIO.</p>
+        ejecución del presente contrato serán a exclusivo cargo de EL PRESTATARIO.</p>
 
         <p><strong>${cn()}: DOMICILIOS.</strong> Las partes constituyen domicilios especiales en los
         indicados en el encabezamiento del presente, donde serán válidas todas las notificaciones
@@ -427,13 +427,13 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">${data.deudorNombre || '___________________________'}</div>
-            <div class="role">EL MUTUARIO — DNI ${data.deudorDni || '________________'}</div>
+            <div class="role">EL PRESTATARIO — DNI ${data.deudorDni || '________________'}</div>
           </div>
         </div>
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">MATIAS FEDERICO CENTURION</div>
-            <div class="role">EL MUTUANTE — ${data.entidad}</div>
+            <div class="role">EL PRESTAMISTA — ${data.entidad}</div>
           </div>
         </div>
       </div>
@@ -448,7 +448,7 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
       </div>
 
       <div class="section">
-        <p class="no-indent"><strong>Mutuario:</strong> ${data.deudorNombre || '___________________________'} — DNI ${data.deudorDni || '________________'}</p>
+        <p class="no-indent"><strong>Prestatario:</strong> ${data.deudorNombre || '___________________________'} — DNI ${data.deudorDni || '________________'}</p>
         <p class="no-indent"><strong>Capital:</strong> ${formatMoney(data.montoFinanciar)} | <strong>TNA:</strong> ${data.tna.toFixed(2)}% | <strong>Sistema:</strong> ${sistemaTexto} | <strong>Plazo:</strong> ${data.plazo} cuotas</p>
       </div>
 
@@ -482,13 +482,13 @@ export async function generarContratoPdf(data: ContratoData): Promise<Buffer> {
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">${data.deudorNombre || '___________________________'}</div>
-            <div class="role">EL MUTUARIO</div>
+            <div class="role">EL PRESTATARIO</div>
           </div>
         </div>
         <div class="firma-box">
           <div class="firma-line">
             <div class="name">MATIAS FEDERICO CENTURION</div>
-            <div class="role">EL MUTUANTE — ${data.entidad}</div>
+            <div class="role">EL PRESTAMISTA — ${data.entidad}</div>
           </div>
         </div>
       </div>
