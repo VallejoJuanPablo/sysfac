@@ -71,6 +71,8 @@ model Configuracion {
 
 model Cotizacion {
   id                 Int      @id @default(autoincrement())
+  tipoPrestamo       String   @default("prendario") @map("tipo_prestamo")
+  entidad            String   @default("Reka Cobranzas")
   nombre             String   @default("")
   valorVehiculo      Decimal  @db.Decimal(14, 2) @map("valor_vehiculo")
   montoFinanciar     Decimal  @db.Decimal(14, 2) @map("monto_financiar")

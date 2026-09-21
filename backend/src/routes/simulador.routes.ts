@@ -30,15 +30,17 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       costoTotal,
     } = req.body;
 
-    if (!valorVehiculo || !montoFinanciar || !plazo || !tna) {
+    if (!montoFinanciar || !plazo || !tna) {
       res.status(400).json({ error: 'Faltan campos obligatorios' });
       return;
     }
 
     const cotizacion = await prisma.cotizacion.create({
       data: {
+        tipoPrestamo: req.body.tipoPrestamo || 'prendario',
+        entidad: req.body.entidad || 'Reka Cobranzas',
         nombre: nombre || '',
-        valorVehiculo,
+        valorVehiculo: valorVehiculo || 0,
         montoFinanciar,
         plazo,
         tna,
